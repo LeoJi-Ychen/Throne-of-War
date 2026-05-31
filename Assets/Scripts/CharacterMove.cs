@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterController))]
 public class CharacterMove : MonoBehaviour
 {
+    CharacterAttack characterAttack;
     [Header("Move")]
     public float runSpeed = 6f;
     public float walkSpeed = 3f;
@@ -17,16 +18,20 @@ public class CharacterMove : MonoBehaviour
 
     [Header("Dodge")]
     public float dodgeSpeed = 20f;
-    public float dodgeDuration = 0.5f;
+    public float dodgeDuration = 1f;
     public float dodgeCooldown = 0.5f;
 
-    [Header("Dodge")]
-    GameObject model;
-    private Vector3 originLoction;
-    private Quaternion originRotation;
-    private Vector3 originScale;
-    public Animator anim;
-    private int anim_state = 0;
+    public MoveState moveState;
+    public enum MoveState
+    {
+        Idle,
+        WalkForward,
+        RunForward,
+        WalkBackward,
+        RunBackward,
+        Jump,
+        Dodge
+    }
 
     private CharacterController controller;
 
@@ -37,36 +42,20 @@ public class CharacterMove : MonoBehaviour
     private float dodgeTimer;
     private float dodgeCooldownTimer;
 
-    private void Awake()
-    {
-        if(anim != null)
-        {
-            model = anim.gameObject;
-        }
-        if (model != null)
-        {
-            originLoction = model.transform.localPosition;
-            originRotation = model.transform.localRotation;
-            originScale = model.transform.localScale;
-        }
-    }
     void Start()
     {
+        characterAttack = GetComponent<CharacterAttack>();
         controller = GetComponent<CharacterController>();      
     }
 
     void Update()
     {
-        HandleMovement();
+        if (characterAttack.attackState == CharacterAttack.AttackState.None)
+        {
+            HandleMovement();
+        }
         HandleGravity();
         HandleDodgeCooldown();
-        if(anim != null)
-        {
-            anim.SetInteger("state", anim_state);
-            model.transform.localPosition = originLoction;
-            model.transform.localRotation = originRotation;
-            model.transform.localScale = originScale;
-        }
     }
 
     void HandleMovement()
@@ -97,27 +86,10 @@ public class CharacterMove : MonoBehaviour
 
         move = move.normalized;
 
-        anim_state = 0;
-
         float speed = Keyboard.current.leftShiftKey.isPressed
             ? walkSpeed
             : runSpeed;
 
-        if (input.y > 0|| input.x !=0)
-        {
-            if (speed == walkSpeed)
-            {
-                anim_state = 2;
-            }
-            else
-            {
-                anim_state = 1;
-            }      
-        }
-        if (input.y < 0)
-        {
-            anim_state = 3;
-        }
 
         if (Keyboard.current.leftCtrlKey.wasPressedThisFrame
             && !isDodging
@@ -125,7 +97,6 @@ public class CharacterMove : MonoBehaviour
             && move != Vector3.zero)
         {
             isDodging = true;
-            anim_state = 6;
             dodgeTimer = dodgeDuration;
             dodgeDirection = move;
 
@@ -134,6 +105,7 @@ public class CharacterMove : MonoBehaviour
 
         if (isDodging)
         {
+            moveState = MoveState.Dodge;
             controller.Move(
                 dodgeDirection *
                 dodgeSpeed *
@@ -148,6 +120,30 @@ public class CharacterMove : MonoBehaviour
         }
         else
         {
+            moveState = MoveState.Idle;
+
+            if (input.y > 0 || input.x != 0)
+            {
+                if (speed == walkSpeed)
+                {
+                    moveState = MoveState.WalkForward;
+                }
+                else
+                {
+                    moveState = MoveState.RunForward;
+                }
+            }
+            if (input.y < 0)
+            {
+                if (speed == walkSpeed)
+                {
+                    moveState = MoveState.WalkBackward;
+                }
+                else
+                {
+                    moveState = MoveState.RunBackward;
+                }
+            }
             controller.Move(
                 move *
                 speed *
@@ -156,8 +152,11 @@ public class CharacterMove : MonoBehaviour
 
         if (Keyboard.current.spaceKey.wasPressedThisFrame && grounded)
         {
-            anim_state = 4;
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        }
+        if (!grounded)
+        {
+            moveState = MoveState.Jump;
         }
     }
 

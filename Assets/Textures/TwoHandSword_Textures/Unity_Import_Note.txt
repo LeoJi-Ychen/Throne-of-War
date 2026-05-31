@@ -1,0 +1,11 @@
+Two-handed sword texture set split from the generated showcase image.
+
+Suggested Unity URP/Lit slots:
+- BaseColor -> Base Map
+- Normal -> Normal Map (set Texture Type to Normal map, then Apply/Fix Now)
+- Metallic -> Metallic Map
+- AO -> Occlusion Map
+- Roughness can be used to manually guide Smoothness: higher roughness means lower smoothness.
+- Height is optional.
+
+Note: these are cropped generated texture previews, not true authored 4K PBR maps.

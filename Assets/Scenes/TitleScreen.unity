@@ -229,7 +229,7 @@ Camera:
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 55
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -249,13 +249,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.16267373, y: -0, z: -0, w: 0.9866799}
-  m_LocalPosition: {x: 0, y: 2.132, z: -3.239}
+  m_LocalRotation: {x: 0.1564345, y: 0, z: 0, w: 0.98768836}
+  m_LocalPosition: {x: 0, y: 1.41, z: -2.43}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 921299633}
-  m_LocalEulerAnglesHint: {x: 18.724, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 18, y: 0, z: 0}
 --- !u!114 &330585547
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -693,10 +693,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: PlayerCharacter
       objectReference: {fileID: 0}
+    - target: {fileID: 1633917194968344634, guid: 6856f36c7b37a614bb59a0a91a93f447, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 0be4bcc6c44163643bad5f6f7b6a9acb, type: 2}
     - target: {fileID: 5866666021909216657, guid: 6856f36c7b37a614bb59a0a91a93f447, type: 3}
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: 0604e3fa05c9fb64aa1b0054d45dee35, type: 2}
+    - target: {fileID: 8841992708261375833, guid: 6856f36c7b37a614bb59a0a91a93f447, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -835,6 +843,8 @@ GameObject:
   - component: {fileID: 1370681167}
   - component: {fileID: 1370681168}
   - component: {fileID: 1370681169}
+  - component: {fileID: 1370681170}
+  - component: {fileID: 1370681171}
   m_Layer: 0
   m_Name: Hero
   m_TagString: Untagged
@@ -851,7 +861,7 @@ Transform:
   m_GameObject: {fileID: 1370681165}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.092, y: 0.96, z: 0}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -903,9 +913,9 @@ MonoBehaviour:
   lowJumpMultiplier: 1.5
   groundedForce: -5
   dodgeSpeed: 12
-  dodgeDuration: 0.2
+  dodgeDuration: 1
   dodgeCooldown: 0.6
-  anim: {fileID: 1002929055}
+  moveState: 0
 --- !u!114 &1370681169
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -925,6 +935,32 @@ MonoBehaviour:
   pitchSpeed: 180
   minPitch: -30
   maxPitch: 15
+--- !u!114 &1370681170
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1370681165}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56681ad858a3a7648afc454a132cf0c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterAnimation
+  anim: {fileID: 1002929055}
+--- !u!114 &1370681171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1370681165}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f157a1608efb14c48a7661105f265794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterAttack
+  attackState: 0
 --- !u!1 &1380832122
 GameObject:
   m_ObjectHideFlags: 0
