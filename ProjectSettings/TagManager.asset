@@ -3,7 +3,10 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 3
-  tags: []
+  tags:
+  - Emy
+  - Ally
+  - Boss
   layers:
   - Default
   - TransparentFX
@@ -11,8 +14,8 @@ TagManager:
   - PlayerSelf
   - Water
   - UI
-  - 
-  - 
+  - Weapon
+  - Role
   - 
   - 
   - 
