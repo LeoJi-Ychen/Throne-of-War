@@ -9,6 +9,7 @@ public class EnemyWeapon : MonoBehaviour
     float timer;
     int stage;
     public List<GameObject> targets = new List<GameObject>();
+    public List<GameObject> targets_npc = new List<GameObject>();
     public void EndAttack()
     {
         isAttack = false;
@@ -25,7 +26,7 @@ public class EnemyWeapon : MonoBehaviour
         {
             GetComponent<BoxCollider>().enabled = true;
             timer += Time.deltaTime;
-            if (atkmode == 1 && targets.Count > 0)
+            if (atkmode == 1)
             {
                 if (timer > 1.9f * (1 - 0.3f * (float)stage) && stage < 2)
                 {
@@ -37,11 +38,18 @@ public class EnemyWeapon : MonoBehaviour
                             target.GetComponent<Character>().BeAttacked(damage);
                         }
                     }
+                    foreach (GameObject target in targets_npc)
+                    {
+                        if (target != null)
+                        {
+                            target.GetComponent<Npc>().BeAttacked(1);
+                        }
+                    }
                     targets.Clear();
                     stage++;
                 }
             }
-            else if (atkmode == 2 && targets.Count > 0)
+            else if (atkmode == 2)
             {
                 if (timer > (1.2f - 0.4f * (float)stage) && stage < 3)
                 {
@@ -51,6 +59,13 @@ public class EnemyWeapon : MonoBehaviour
                         if (target != null)
                         {
                             target.GetComponent<Character>().BeAttacked(damage);
+                        }
+                    }
+                    foreach (GameObject target in targets_npc)
+                    {
+                        if (target != null)
+                        {
+                            target.GetComponent<Npc>().BeAttacked(1);
                         }
                     }
                     targets.Clear();
@@ -69,7 +84,15 @@ public class EnemyWeapon : MonoBehaviour
                             target.GetComponent<Character>().BeAttacked(damage);
                         }
                     }
+                    foreach (GameObject target in targets_npc)
+                    {
+                        if (target != null)
+                        {
+                            target.GetComponent<Npc>().BeAttacked(1);
+                        }
+                    }
                     targets.Clear();
+                    targets_npc.Clear();
                     stage++;
                 }
             }
@@ -80,6 +103,7 @@ public class EnemyWeapon : MonoBehaviour
             stage = 0;
             timer = 0;
             targets.Clear();
+            targets_npc.Clear();
             GetComponent<BoxCollider>().enabled = false;
         }
 
@@ -91,6 +115,14 @@ public class EnemyWeapon : MonoBehaviour
             if (!targets.Contains(other.gameObject))
             {
                 targets.Add(other.gameObject);
+            }
+            //other.GetComponent<Enemy>().BeAttacked(damage);
+        }
+        if (other.tag == "NPC")
+        {
+            if (targets_npc.Count < 1)
+            {
+                targets_npc.Add(other.gameObject);
             }
             //other.GetComponent<Enemy>().BeAttacked(damage);
         }

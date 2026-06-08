@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.XR;
@@ -6,7 +7,9 @@ using UnityEngine.TextCore.Text;
 [RequireComponent(typeof(CharacterController))]
 public class EnemyBoss : MonoBehaviour
 {
+    public GameObject audio_hitted;
     public GameObject player;
+    public List<GameObject> npclist = new List<GameObject>();
     public GameObject target;
     public GameObject weapon;
     HitEffect hitEffect;
@@ -38,16 +41,22 @@ public class EnemyBoss : MonoBehaviour
     bool isRunning;
     int atk_count;
     bool hitted_state;
-    bool sitting;
+    public bool sitting;
     float sitting_timer;
     int life;
     public float rotateSpeed = 360f;
+    bool redflash;
+    float hatred_timer;
+    bool invincible;
+    float invincible_timer;
+    public Vector3 startPostion;
+    bool aimplayer;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     private void Awake()
     {
-        life = 3;
+        life = 10;
         behaviorDuration = 3;
-        maxblood = 100;
+        maxblood = 120;
         damage = 10;
         moveSpeed = 4.5f;
         blood = maxblood;
@@ -62,15 +71,70 @@ public class EnemyBoss : MonoBehaviour
             originScale = model.transform.localScale;
         }
     }
+    void ResetTarget()
+    {
+        npclist = new List<GameObject>(GameObject.FindGameObjectsWithTag("NPC"));
+        List<GameObject> nearnpclist = new List<GameObject>();
+        foreach(GameObject n in npclist)
+        {
+            if (distance(n) < 5)
+            {
+                nearnpclist.Add(n);
+            }
+        }
+        if (nearnpclist.Count > 0)
+        {
+            if (distance(player) < 8)
+            {
+                if (Random.Range(0, 10) < 8)
+                {
+                    target = nearnpclist[Random.Range(0, nearnpclist.Count)];
+                }
+                else
+                {
+                    target = player;
+                }
+            }
+            else
+            {
+                target = nearnpclist[Random.Range(0, nearnpclist.Count)];
+            }
+        }
+        else
+        {
+            if (Random.Range(0, 10) < 8)
+            {
+                if (npclist.Count > 0)
+                {
+                    target = npclist[Random.Range(0, npclist.Count)];
+                }
+                else
+                {
+                    target = player;
+                }
+            }
+            else
+            {
+                target = player;
+            }
+        }   
+    }
+    float distance(GameObject obj)
+    {
+        float res = (obj.transform.position - transform.position).magnitude;
+        return res;
+    }
     void Start()
     {
+        startPostion = transform.position;
         controller = GetComponent<CharacterController>();
         player = GameObject.FindWithTag("Player");
+        ResetTarget();
         hitEffect = GetComponent<HitEffect>() ? GetComponent<HitEffect>() : this.gameObject.AddComponent<HitEffect>();
     }
     void Rotate()
     {
-        Vector3 dir = player.transform.position - transform.position;
+        Vector3 dir = target.transform.position - transform.position;
         dir.y = 0;
 
         if (dir.sqrMagnitude < 0.01f)
@@ -88,6 +152,44 @@ public class EnemyBoss : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (invincible)
+        {
+            invincible_timer += Time.deltaTime;
+            if(invincible_timer > 3)
+            {
+                invincible_timer = 0;
+                invincible = false;
+            }
+        }
+        if (!aimplayer)
+        {
+            if (player.GetComponent<CombatManager>().battlefieldChange)
+            {
+                aimplayer = true;
+                target = player;
+                hatred_timer = 0;
+            }
+        }
+        if (target == null)
+        {
+            ResetTarget();
+        }
+        else if (target.activeSelf == false)
+        {
+            ResetTarget();
+        }
+        else
+        {
+            if (distanceToTarget() > 9)
+            {
+                hatred_timer += Time.deltaTime;
+                if (hatred_timer > 6)
+                {
+                    hatred_timer = 0;
+                    target = null;
+                }
+            }
+        }
         if (death)
         {
             return;
@@ -109,10 +211,12 @@ public class EnemyBoss : MonoBehaviour
                 atk_count = 0;
                 behavior_state = 0;
                 behaviorDuration = 2;
+                player.GetComponent<CombatManager>().emyforces -= 200;
             }
             else
             {
                 nearDeath = true;
+                player.GetComponent<CombatManager>().emyforces -= 10000;
             }
         }
         if (nearDeath)
@@ -120,17 +224,24 @@ public class EnemyBoss : MonoBehaviour
             dead_timer += Time.deltaTime;
             if (dead_timer > 3)
             {
-                gameObject.layer = LayerMask.NameToLayer("Default");
-                controller.enabled = false;
-                weapon.SetActive(false);
                 death = true;
+                this.gameObject.SetActive(false);
             }
         }
         if (!nearDeath&&!sitting)
-        {
-            EnemyBehavior();
+        {          
+            if (target != null)
+            {
+                EnemyBehavior();
+                Rotate();
+            }
+            else
+            {
+                behavior_state = 0;
+                behavior_timer = 0;
+                isRunning = false;
+            }
             HandleGravity();
-            Rotate();
         }
         if (sitting)
         {
@@ -139,6 +250,7 @@ public class EnemyBoss : MonoBehaviour
             {
                 sitting_timer = 0;
                 sitting = false;
+                ResetTarget();
             }
         }
         if (anim != null)
@@ -153,16 +265,24 @@ public class EnemyBoss : MonoBehaviour
         }
         //Debug.Log(distanceToPlayer());
     }
-    public void BeAttacked(int damage)
+    public void BeAttacked(int damage, int mode = 0)
     {
-        if (!sitting)
+        blood -= damage;
+        if (!invincible||mode>=1)
         {
-            blood -= damage;
             hitted = true;
-            behavior_timer = 2;
-            behavior_state = 0;
-            atk_mode = 0;
-        }     
+            target = player;
+            weapon.GetComponent<EnemyWeapon>().isAttack = false;
+            audio_hitted.GetComponent<AudioSource>().Play();
+        }
+        if (mode > 2)
+        {
+            redflash = true;
+        }
+        behavior_timer = 2;
+        behavior_state = 0;
+        atk_mode = 0;
+        player.GetComponent<CombatManager>().emyforces -= 1;
     }
     public void BeHealed(int heal)
     {
@@ -187,9 +307,9 @@ public class EnemyBoss : MonoBehaviour
                 isRunning = false;
                 break;
             case 1:
-                if (distanceToPlayer() > 4)
+                if (distanceToTarget() > 4)
                 {
-                    controller.Move(dirToPlayer() * moveSpeed * Time.deltaTime);
+                    controller.Move(dirToTarget() * moveSpeed * Time.deltaTime);
                     isRunning = true;
                 }
                 else
@@ -200,9 +320,9 @@ public class EnemyBoss : MonoBehaviour
                 }     
                 break;
             case 2:
-                if (distanceToPlayer() > 1.4f && atk_mode == 0 && atk_count == 0)
+                if (distanceToTarget() > 1.6f && atk_mode == 0 && atk_count == 0)
                 {
-                    controller.Move(dirToPlayer() * moveSpeed * 1.2f * Time.deltaTime);
+                    controller.Move(dirToTarget() * moveSpeed * 1.2f * Time.deltaTime);
                     isRunning = true;
                 }
                 else
@@ -216,9 +336,9 @@ public class EnemyBoss : MonoBehaviour
                 }
                 break;
             case 3:
-                if (distanceToPlayer() > 1.4f && atk_mode == 0 && atk_count == 0)
+                if (distanceToTarget() > 1.6f && atk_mode == 0 && atk_count == 0)
                 {
-                    controller.Move(dirToPlayer() * moveSpeed * 1.2f * Time.deltaTime);
+                    controller.Move(dirToTarget() * moveSpeed * 1.2f * Time.deltaTime);
                     isRunning = true;
                 }
                 else
@@ -232,9 +352,9 @@ public class EnemyBoss : MonoBehaviour
                 }
                 break;
             case 4:
-                if (distanceToPlayer() > 1.4f && atk_mode==0 && atk_count==0)
+                if (distanceToTarget() > 1.6f && atk_mode==0 && atk_count==0)
                 {
-                    controller.Move(dirToPlayer() * moveSpeed * 1.2f * Time.deltaTime);
+                    controller.Move(dirToTarget() * moveSpeed * 1.2f * Time.deltaTime);
                     isRunning = true;
                 }
                 else
@@ -249,21 +369,21 @@ public class EnemyBoss : MonoBehaviour
                 break;
         }
     }
-    float distanceToPlayer()
+    float distanceToTarget()
     {
         float res = 100;
-        if (player != null)
+        if (target != null)
         {
-            res = (player.transform.position - transform.position).magnitude;
+            res = (target.transform.position - transform.position).magnitude;
         }
         return res;
     }
-    Vector3 dirToPlayer()
+    Vector3 dirToTarget()
     {
-        Vector3 v = Vector3.forward;
-        if (player != null)
+        Vector3 v = transform.forward;
+        if (target != null)
         {
-            v = (player.transform.position - transform.position);
+            v = (target.transform.position - transform.position);
             v.y = 0;
         }
         return v.normalized;
@@ -284,7 +404,12 @@ public class EnemyBoss : MonoBehaviour
             {
                 hitted = false;
                 hitted_state = true;
-                hitEffect.TakeDamage();
+                invincible = true;
+                if (redflash)
+                {
+                    redflash = false;
+                    hitEffect.TakeDamage();
+                }
                 anim.Play("hitted", 0, 0f);
             }
             AnimatorStateInfo state = anim.GetCurrentAnimatorStateInfo(0);

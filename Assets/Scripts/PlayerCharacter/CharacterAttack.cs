@@ -87,13 +87,6 @@ public class CharacterAttack : MonoBehaviour
                     isPress = true;
                 }
             }
-            if (attack_state == 0 && canInput)
-            {
-                if (Keyboard.current.kKey.wasPressedThisFrame)
-                {
-                    attack_state = 5;
-                }
-            }
         }      
         if (attack_state != 0)
         {

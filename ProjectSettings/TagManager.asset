@@ -5,8 +5,8 @@ TagManager:
   serializedVersion: 3
   tags:
   - Emy
-  - Ally
   - Boss
+  - NPC
   layers:
   - Default
   - TransparentFX
@@ -16,7 +16,7 @@ TagManager:
   - UI
   - Weapon
   - Role
-  - 
+  - Ground
   - 
   - 
   - 

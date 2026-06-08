@@ -9,11 +9,23 @@ EditorBuildSettings:
     path: Assets/Scenes/TitleScreen.unity
     guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1
+    path: Assets/Scenes/Test.unity
+    guid: 49ac7b1b4f3abd5409468e595f238365
+  - enabled: 1
     path: Assets/Scenes/StartScreen.unity
     guid: 7e3df1afe919721429fd13d9bf5c36ea
   - enabled: 1
-    path: Assets/Scenes/Test.unity
-    guid: 49ac7b1b4f3abd5409468e595f238365
+    path: Assets/Scenes/MainGame.unity
+    guid: 0de0e29ecfbac3e4d96cfa6e1cbba2ff
+  - enabled: 1
+    path: Assets/Scenes/Battlefield.unity
+    guid: 7067d252dc36f37489c3936eca5ba41c
+  - enabled: 1
+    path: Assets/Scenes/Setting.unity
+    guid: edb61c1a3da61754194ebc4e752cc159
+  - enabled: 1
+    path: Assets/Scenes/Credits.unity
+    guid: 90a38c9ccedf64544bfde2cc1910fe83
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

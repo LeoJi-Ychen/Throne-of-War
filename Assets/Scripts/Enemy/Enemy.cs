@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+//using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.XR;
@@ -7,7 +9,10 @@ using static UnityEngine.GraphicsBuffer;
 [RequireComponent(typeof(CharacterController))]
 public class Enemy : MonoBehaviour
 {
+    public int troopID;
     public GameObject player;
+    public List<GameObject> npclist = new List<GameObject>();
+    public GameObject target;
     public GameObject weapon;
     HitEffect hitEffect;
     GameObject model;
@@ -23,13 +28,13 @@ public class Enemy : MonoBehaviour
     public bool nearDeath;
     public bool death;
     public float dead_timer;
-    int behavior_state;
+    public int behavior_state;
     float behaviorDuration;
     float behavior_timer;
     private CharacterController controller;
     private Vector3 velocity;
     float moveSpeed;
-    int atk_mode;
+    public int atk_mode;
     [Header("Jump Feel")]
     public float gravity = -25f;
     public float fallMultiplier = 2.2f;
@@ -39,12 +44,18 @@ public class Enemy : MonoBehaviour
     int atk_count;
     bool hitted_state;
     public float rotateSpeed = 360f;
+    bool redflash;
+    float hatred_timer;
+    float resettarget_timer;
+    Vector3 startPostion;
+    Vector3 modelparent_location;
+    Vector3 hitback_dir;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     private void Awake()
     {
         behaviorDuration = 3;
-        maxblood = 100;
-        damage = 10;
+        maxblood = 18;
+        damage = 3;
         moveSpeed = 4.2f;
         blood = maxblood;
         if (anim != null)
@@ -58,15 +69,72 @@ public class Enemy : MonoBehaviour
             originScale = model.transform.localScale;
         }
     }
+    void ResetTarget()
+    {
+        npclist = new List<GameObject>(GameObject.FindGameObjectsWithTag("NPC"));
+        List<GameObject> nearnpclist = new List<GameObject>();
+        foreach (GameObject n in npclist)
+        {
+            if (distance(n) < 5)
+            {
+                nearnpclist.Add(n);
+            }
+        }
+        if (nearnpclist.Count > 0)
+        {
+            if (distance(player) < 8)
+            {
+                if (Random.Range(0, 10) < 5)
+                {
+                    target = nearnpclist[Random.Range(0, nearnpclist.Count)];
+                    target.GetComponent<Npc>().target = this.gameObject;
+                }
+                else
+                {
+                    target = player;
+                }
+            }
+            else
+            {
+                target = nearnpclist[Random.Range(0, nearnpclist.Count)];
+                target.GetComponent<Npc>().target = this.gameObject;
+            }
+        }
+        else
+        {
+            if (Random.Range(0, 10) < 6)
+            {
+                if (npclist.Count > 0)
+                {
+                    target = npclist[Random.Range(0, npclist.Count)];
+                    target.GetComponent<Npc>().target = this.gameObject;
+                }
+                else
+                {
+                    target = player;
+                }
+            }
+            else
+            {
+                target = player;
+            }
+        }       
+    }
+    float distance(GameObject obj)
+    {
+        float res = (obj.transform.position - transform.position).magnitude;
+        return res;
+    }
     void Start()
     {
+        startPostion = transform.position;
         controller = GetComponent<CharacterController>();
         player = GameObject.FindWithTag("Player");
         hitEffect = GetComponent<HitEffect>() ? GetComponent<HitEffect>() : this.gameObject.AddComponent<HitEffect>();
     }
     void Rotate()
     {
-        Vector3 dir = player.transform.position - transform.position;
+        Vector3 dir = target.transform.position - transform.position;
         dir.y = 0;
 
         if (dir.sqrMagnitude < 0.01f)
@@ -84,32 +152,81 @@ public class Enemy : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (target == null)
+        {
+            resettarget_timer += Time.deltaTime;
+            if(resettarget_timer > 1)
+            {
+                resettarget_timer = 0;
+                ResetTarget();
+            }
+        }
+        else if (target.activeSelf == false)
+        {
+            resettarget_timer += Time.deltaTime;
+            if (resettarget_timer > 1)
+            {
+                resettarget_timer = 0;
+                ResetTarget();
+            }
+        }
+        else
+        {
+            if (distanceToTarget() > 8)
+            {
+                hatred_timer += Time.deltaTime;
+                if (hatred_timer > 5)
+                {
+                    hatred_timer = 0;
+                    target = null;
+                }
+            }
+        }
         if (death)
         {
+            Birth();
             return;
         }
         weapon.GetComponent<EnemyWeapon>().damage = damage;
         if (blood <= 0)
         {
-            nearDeath = true;           
+            if (!nearDeath)
+            {
+                modelparent_location = model.transform.parent.position;
+                hitback_dir = -transform.forward;
+                nearDeath = true;
+                player.GetComponent<CombatManager>().emyforces -= 10;
+                controller.excludeLayers = LayerMask.GetMask("Role");
+            }            
         }
         if (nearDeath)
         {
+            behavior_state = 0;
+            behavior_timer = 0;
             dead_timer += Time.deltaTime;
+            Revive();
             if (dead_timer > 3)
             {
-                gameObject.layer = LayerMask.NameToLayer("Default");
-                controller.enabled = false;
-                weapon.SetActive(false);
+                dead_timer = 0;
                 death = true;
+                //this.gameObject.SetActive(false);
             }
         }
         if (!nearDeath)
         {
-            EnemyBehavior();
+            if (target != null)
+            {
+                EnemyBehavior();
+                Rotate();
+            }
+            else
+            {
+                behavior_state = 0;
+                behavior_timer = 0;
+                isRunning = false;
+            }
             HandleGravity();
-            Rotate();
-        }   
+        }
         if (anim != null)
         {
             AnimationControll();
@@ -122,13 +239,23 @@ public class Enemy : MonoBehaviour
         }
         //Debug.Log(distanceToPlayer());
     }
-    public void BeAttacked(int damage)
+    public void BeAttacked(int damage,int mode = 0)
     {
         blood -= damage;
         hitted = true;
+        if (mode >= 1)
+        {
+            target = player;
+            weapon.GetComponent<EnemyWeapon>().isAttack = false;
+        }
+        if (mode >2)
+        {
+            redflash = true;
+        }
         behavior_timer = 2;
         behavior_state = 0;
         atk_mode = 0;
+        player.GetComponent<CombatManager>().emyforces -= 1;
     }
     public void BeHealed(int heal)
     {
@@ -144,7 +271,14 @@ public class Enemy : MonoBehaviour
         {
             behavior_timer = 0;
             atk_count = 0;
-            behavior_state = Random.Range(0, 5);
+            if (distanceToTarget() > 6)
+            {
+                behavior_state = 2;
+            }
+            else
+            {
+                behavior_state = Random.Range(0, 5);
+            }
         }
         switch (behavior_state)
         {
@@ -153,9 +287,9 @@ public class Enemy : MonoBehaviour
                 isRunning = false;
                 break;
             case 1:
-                if (distanceToPlayer() > 4)
+                if (distanceToTarget() > 4)
                 {
-                    controller.Move(dirToPlayer() * moveSpeed * Time.deltaTime);
+                    controller.Move(dirToTarget() * moveSpeed * Time.deltaTime);
                     isRunning = true;
                 }
                 else
@@ -167,9 +301,9 @@ public class Enemy : MonoBehaviour
                 }     
                 break;
             case 2:
-                if (distanceToPlayer() > 1.2f && atk_mode == 0 && atk_count == 0)
+                if (distanceToTarget() > 1.2f && atk_mode == 0 && atk_count == 0)
                 {
-                    controller.Move(dirToPlayer() * moveSpeed * 1.2f * Time.deltaTime);
+                    controller.Move(dirToTarget() * moveSpeed * 1.2f * Time.deltaTime);
                     isRunning = true;
                 }
                 else
@@ -183,9 +317,9 @@ public class Enemy : MonoBehaviour
                 }
                 break;
             case 3:
-                if (distanceToPlayer() > 1.2f && atk_mode == 0 && atk_count == 0)
+                if (distanceToTarget() > 1.2f && atk_mode == 0 && atk_count == 0)
                 {
-                    controller.Move(dirToPlayer() * moveSpeed * 1.2f * Time.deltaTime);
+                    controller.Move(dirToTarget() * moveSpeed * 1.2f * Time.deltaTime);
                     isRunning = true;
                 }
                 else
@@ -199,9 +333,9 @@ public class Enemy : MonoBehaviour
                 }
                 break;
             case 4:
-                if (distanceToPlayer() > 1.2f && atk_mode==0 && atk_count == 0)
+                if (distanceToTarget() > 1.2f && atk_mode==0 && atk_count == 0)
                 {
-                    controller.Move(dirToPlayer() * moveSpeed * 1.2f * Time.deltaTime);
+                    controller.Move(dirToTarget() * moveSpeed * 1.2f * Time.deltaTime);
                     isRunning = true;
                 }
                 else
@@ -216,21 +350,21 @@ public class Enemy : MonoBehaviour
                 break;
         }
     }
-    float distanceToPlayer()
+    float distanceToTarget()
     {
         float res = 100;
-        if (player != null)
+        if (target != null)
         {
-            res = (player.transform.position - transform.position).magnitude;
+            res = (target.transform.position - transform.position).magnitude;
         }
         return res;
     }
-    Vector3 dirToPlayer()
+    Vector3 dirToTarget()
     {
-        Vector3 v = Vector3.forward;
-        if (player != null)
+        Vector3 v = transform.forward;
+        if (target != null)
         {
-            v = (player.transform.position - transform.position);
+            v = (target.transform.position - transform.position);
             v.y = 0;
         }
         return v.normalized;
@@ -247,7 +381,11 @@ public class Enemy : MonoBehaviour
             {
                 hitted = false;
                 hitted_state = true;
-                hitEffect.TakeDamage();
+                if (redflash)
+                {
+                    redflash = false;
+                    hitEffect.TakeDamage();
+                }             
                 anim.Play("hitted", 0, 0f);
             }
             AnimatorStateInfo state = anim.GetCurrentAnimatorStateInfo(0);
@@ -335,5 +473,38 @@ public class Enemy : MonoBehaviour
         }
 
         controller.Move(velocity * Time.deltaTime);
+    }
+    void Revive()
+    {      
+        if((startPostion - player.transform.position).magnitude < 6)
+        {
+            startPostion = player.transform.position + player.transform.forward*6;
+        }
+        Vector3 dir = (startPostion - transform.position);
+        dir.y = 0;
+        float dis = dir.magnitude;
+        dir.Normalize();
+        if (dis > 0.5f)
+        {
+            controller.Move(dir * 10*Time.deltaTime);
+        }
+        model.transform.parent.position = modelparent_location;
+    }
+    public void Birth()
+    {
+        model.transform.parent.localPosition = Vector3.zero;
+        model.transform.localPosition = originLoction;
+        model.transform.localRotation = originRotation;
+        model.transform.localScale = originScale;
+        if (target == player)
+        {
+            target = null;
+        }
+        blood = maxblood;
+        nearDeath = false;
+        death = false;
+        hitted = false;
+        hitted_state = false;
+        controller.excludeLayers = 0;
     }
 }

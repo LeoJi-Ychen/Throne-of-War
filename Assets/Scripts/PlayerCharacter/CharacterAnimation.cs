@@ -17,7 +17,7 @@ public class CharacterAnimation : MonoBehaviour
     private Quaternion originRotation;
     private Vector3 originScale;
     private int anim_state_move;
-    private int anim_laststate_move;
+    public int anim_laststate_move;
     private Queue<int> anim_state_attack = new Queue<int>();
     public bool isAttacking;
     float movestatechange_timer; 
@@ -94,13 +94,24 @@ public class CharacterAnimation : MonoBehaviour
             AnimatorStateInfo state = anim.GetCurrentAnimatorStateInfo(0);
             if (character.nearDeath)
             {
-                anim.Play("death");
+                anim.Play("sit");
+                anim_laststate_move = -1;
+                anim_state_attack.Clear();
             }
-            else if (character.hitted)
+            else if (character.hitted || character.hitted_state)
             {
-                character.hitted = false;
-                //anim.Play("hitted");
-                hitEffect.TakeDamage();
+                if (character.hitted)
+                {
+                    character.hitted = false;
+                    character.hitted_state = true;
+                    character.invincible = true;
+                    anim.Play("hitted", 0, 0);
+                }        
+                //hitEffect.TakeDamage();
+                if (state.IsName("hitted") && state.normalizedTime >= 1f)
+                {
+                    character.hitted_state = false;                
+                }
             }
             else
             {
@@ -151,7 +162,7 @@ public class CharacterAnimation : MonoBehaviour
                         model.transform.localPosition = originLoction;
                         model.transform.localRotation = originRotation;
                         model.transform.localScale = originScale;
-                        anim_laststate_move = 0;
+                        anim_laststate_move = -1;
                     }
                 }
                 else if(state.IsName("dodgeback"))
@@ -162,7 +173,7 @@ public class CharacterAnimation : MonoBehaviour
                         model.transform.localPosition = originLoction;
                         model.transform.localRotation = originRotation;
                         model.transform.localScale = originScale;
-                        anim_laststate_move = 0;
+                        anim_laststate_move = -1;
                     }
                 }
                 else if (state.IsName("jump"))
@@ -252,9 +263,6 @@ public class CharacterAnimation : MonoBehaviour
             case 4:
                 anim.Play("atk04", 0, 0);
                 character.atkmode = 2;
-                break;
-            case 5:
-                anim.Play("encourage", 0, 0);
                 break;
         }
         isAttacking = true;

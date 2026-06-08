@@ -8,8 +8,8 @@ public class CharacterMove : MonoBehaviour
     CharacterAttack characterAttack;
     CharacterAnimation characterAnimation;
     [Header("Move")]
-    public float runSpeed = 4.5f;
-    public float walkSpeed = 3f;
+    float runSpeed = 4f;
+    float walkSpeed = 3f;
 
     [Header("Jump Feel")]
     float jumpHeight = 1f;
@@ -64,7 +64,7 @@ public class CharacterMove : MonoBehaviour
 
     void Update()
     {
-        if (!characterAnimation.isAttacking)
+        if (!characterAnimation.isAttacking && !GetComponent<Character>().hitted_state && !GetComponent<Character>().nearDeath)
         {
             if (characterAttack.isPress)
             {
