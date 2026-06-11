@@ -15,6 +15,19 @@ public class NpcUI : MonoBehaviour
         length_bloodLine = bloodLine.GetComponent<RectTransform>().rect.width;
         init = true;
     }
+    private void OnEnable()
+    {
+        player = GameObject.FindWithTag("Player");
+        canvas.SetActive(true);
+        if (sqdistance(player) > 144)
+        {
+            canvas.SetActive(false);
+        }
+    }
+    private void OnDisable()
+    {
+        canvas.SetActive(false);
+    }
 
     // Update is called once per frame
     void Update()
@@ -23,7 +36,7 @@ public class NpcUI : MonoBehaviour
         {
             return;
         }
-        if (distance(player) > 13)
+        if (sqdistance(player) > 144)
         {
             canvas.SetActive(false);
         }
@@ -52,6 +65,11 @@ public class NpcUI : MonoBehaviour
     float distance(GameObject obj)
     {
         float res = (obj.transform.position - transform.position).magnitude;
+        return res;
+    }
+    float sqdistance(GameObject obj)
+    {
+        float res = (obj.transform.position - transform.position).sqrMagnitude;
         return res;
     }
 }

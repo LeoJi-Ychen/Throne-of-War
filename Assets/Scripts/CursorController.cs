@@ -5,6 +5,10 @@ public class CursorController : MonoBehaviour
 {
     private bool cursorLocked = false;
 
+    private void Start()
+    {
+        HideCursor();
+    }
     void Update()
     {
         if (Keyboard.current.tabKey.wasPressedThisFrame)
@@ -27,5 +31,11 @@ public class CursorController : MonoBehaviour
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
         }
+    }
+    void HideCursor()
+    {
+        cursorLocked = true;
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
     }
 }

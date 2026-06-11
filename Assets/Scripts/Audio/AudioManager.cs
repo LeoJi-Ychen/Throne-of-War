@@ -9,9 +9,9 @@ public class AudioManager : MonoBehaviour
     public AudioMixer audioMixer;
 
     [Header("Default Volume")]
-    [Range(0f, 1f)] public float defaultMasterVolume = 1f;
-    [Range(0f, 1f)] public float defaultMusicVolume = 0.8f;
-    [Range(0f, 1f)] public float defaultSFXVolume = 1f;
+    [Range(0f, 1f)] public float defaultMasterVolume = 0.6f;
+    [Range(0f, 1f)] public float defaultMusicVolume = 0.6f;
+    [Range(0f, 1f)] public float defaultSFXVolume = 0.6f;
 
     private const string MasterKey = "MasterVolume";
     private const string MusicKey = "MusicVolume";

@@ -202,7 +202,7 @@ Camera:
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 55
+    m_Bits: 311
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -1169,9 +1169,13 @@ MonoBehaviour:
   audio_win: {fileID: 4390967212633993897}
   audio_loss: {fileID: 5910227849237047655}
   audio_horn: {fileID: 891486400442539480}
+  maxplayerforces: 0
+  maxemyforces: 0
   playerforces: 0
   emyforces: 0
   battleSituation: 0
+  Arena: {fileID: 0}
+  AllTroop: {fileID: 0}
   emyEliteTroop_0: {fileID: 0}
   emyEliteTroop_1: {fileID: 0}
   battleGroups: []
@@ -1294,6 +1298,7 @@ MonoBehaviour:
   death: 0
   dead_timer: 0
   invincible: 0
+  single: 0
 --- !u!114 &7770758651821993851
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -10,11 +10,15 @@ public class CombatUI : MonoBehaviour
     public GameObject Win;
     public GameObject Lose;
     public GameObject bloodLine;
+    public GameObject playerMoraleLine;
+    public GameObject enemyMoraleLine;
     public GameObject playerForceLine;
     public GameObject enemyForceLine;
     public GameObject tips;
     public GameObject Morale_Bravery;
     public GameObject Morale_Broken;
+    public GameObject skill;
+    public GameObject battledisplay;
     float length_bloodLine;
     float length_playerForceLine;
     float length_enemyForceLine;
@@ -44,6 +48,14 @@ public class CombatUI : MonoBehaviour
             player = GameObject.FindWithTag("Player");
             return;
         }
+        if (player.GetComponent<Character>().single)
+        {
+            skill.SetActive(true);
+        }
+        else
+        {
+            skill.SetActive(false);
+        }
         if (player.GetComponent<Commander>().OrderID != 1)
         {
             tips.SetActive(true);
@@ -63,6 +75,8 @@ public class CombatUI : MonoBehaviour
             Morale_Broken.SetActive(false);
             Morale_Bravery.SetActive(true);
         }
+        int maxpf = Mathf.Max(0, player.GetComponent<CombatManager>().maxplayerforces);
+        int maxef = Mathf.Max(0, player.GetComponent<CombatManager>().maxemyforces);
         int pf = Mathf.Max(0, player.GetComponent<CombatManager>().playerforces);
         int ef = Mathf.Max(0, player.GetComponent<CombatManager>().emyforces);
         int blood = player.GetComponent<Character>().blood;
@@ -72,19 +86,25 @@ public class CombatUI : MonoBehaviour
             RectTransform rt_blood = bloodLine.GetComponent<RectTransform>();
             rt_blood.sizeDelta = new Vector2(((float)(blood)) / (maxblood) * length_bloodLine, rt_blood.sizeDelta.y);
         }      
-        playerForce.text = "Player Force: " + pf;
-        RectTransform rt_pf = playerForceLine.GetComponent<RectTransform>();
+        //player
+        playerForce.text = "Player Force: " + pf + "/" + maxpf;
+        RectTransform rt_pf = playerMoraleLine.GetComponent<RectTransform>();
         rt_pf.sizeDelta = new Vector2(((float)(pf + 1)) / (pf + ef + 2) * length_playerForceLine, rt_pf.sizeDelta.y);
-        enemyForce.text = "Enemy Force: " + ef;
-        RectTransform rt_ef = enemyForceLine.GetComponent<RectTransform>();
+        playerForceLine.GetComponent<Image>().fillAmount = (float)(pf) / Mathf.Max(maxpf, 1);
+        //enemy
+        enemyForce.text = "Enemy Force: " + ef + "/" + maxef;
+        RectTransform rt_ef = enemyMoraleLine.GetComponent<RectTransform>();
         rt_ef.sizeDelta = new Vector2(((float)(ef + 1)) / (pf + ef + 2) * length_enemyForceLine, rt_ef.sizeDelta.y);
+        enemyForceLine.GetComponent<Image>().fillAmount = (float)(ef) / Mathf.Max(maxef, 1);
         if (player.GetComponent<CombatManager>().gameRes == 1)
         {
             Win.SetActive(true);
+            battledisplay.SetActive(false);
         }
         else if (player.GetComponent<CombatManager>().gameRes == 2)
         {
             Lose.SetActive(true);
+            battledisplay.SetActive(false);
         }
     }
 }

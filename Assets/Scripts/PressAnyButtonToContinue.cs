@@ -12,11 +12,11 @@ public class PressAnyButtonToContinue : MonoBehaviour
 
     void Update()
     {
-        if (Keyboard.current.anyKey.wasPressedThisFrame ||
-            Mouse.current.leftButton.wasPressedThisFrame ||
-            Mouse.current.rightButton.wasPressedThisFrame)
+        if (Keyboard.current.anyKey.wasReleasedThisFrame ||
+            Mouse.current.leftButton.wasReleasedThisFrame ||
+            Mouse.current.rightButton.wasReleasedThisFrame)
         {
-            SceneManager.LoadScene(sceneName);
+            SceneManager.LoadSceneAsync(sceneName);
         }
         if (state == 0)
         {

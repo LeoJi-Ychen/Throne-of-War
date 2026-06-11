@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 public class CharacterWeapon : MonoBehaviour
 {
+    public static bool hit;
     public bool isAttack;
     public int atkmode;
     public int damage;
@@ -15,6 +16,36 @@ public class CharacterWeapon : MonoBehaviour
     void Start()
     {
         
+    }
+    private void OnDisable()
+    {
+        if (timer > 0.6f && stage < 1)
+        {
+            timer = 0;
+            if (audio_hit != null)
+            {
+                audio_hit.GetComponent<AudioSource>().Stop();
+                audio_hit.GetComponent<AudioSource>().Play();
+            }
+            foreach (GameObject target in targets)
+            {
+                if (target != null)
+                {
+                    target.GetComponent<Enemy>().BeAttacked(damage, 1);
+                }
+            }
+            foreach (GameObject target in targets_boss)
+            {
+                if (target != null)
+                {
+                    target.GetComponent<EnemyBoss>().BeAttacked(damage, 1);
+                }
+            }           
+        }
+        hit = false;
+        targets.Clear();
+        targets_boss.Clear();
+        stage = 0;
     }
     public void EndAttack()
     {
@@ -58,6 +89,7 @@ public class CharacterWeapon : MonoBehaviour
                         }
                     }
                     stage++;
+                    hit = true;
                 }
             }
             else if (atkmode == 2 && (targets.Count > 0 || targets_boss.Count > 0))
@@ -85,6 +117,7 @@ public class CharacterWeapon : MonoBehaviour
                         }
                     }
                     stage++;
+                    hit = true;
                 }
             }
             else if((targets.Count > 0 || targets_boss.Count > 0))
@@ -114,6 +147,7 @@ public class CharacterWeapon : MonoBehaviour
                     targets.Clear();
                     targets_boss.Clear();
                     stage++;
+                    hit = true;
                 }
             }           
         }

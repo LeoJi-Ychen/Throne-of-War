@@ -9,6 +9,7 @@ using static UnityEngine.GraphicsBuffer;
 public class Npc : MonoBehaviour
 {
     public GameObject player;
+    public GameObject army;
     public List<GameObject> emylist = new List<GameObject>();
     public List<GameObject> bosslist = new List<GameObject>();
     public GameObject target;
@@ -99,13 +100,23 @@ public class Npc : MonoBehaviour
         }
         if (!cheer)
         {
-            emylist = new List<GameObject>(GameObject.FindGameObjectsWithTag("Emy"));
-            bosslist = new List<GameObject>(GameObject.FindGameObjectsWithTag("Boss"));
-            if (Random.Range(0, 10) < 8)
+            if (army == null)
             {
-                if (emylist.Count > 0)
+                emylist = new List<GameObject>(GameObject.FindGameObjectsWithTag("Emy"));
+                bosslist = new List<GameObject>(GameObject.FindGameObjectsWithTag("Boss"));
+                if (Random.Range(0, 10) < 8)
                 {
-                    target = emylist[Random.Range(0, emylist.Count)];
+                    if (emylist.Count > 0)
+                    {
+                        target = emylist[Random.Range(0, emylist.Count)];
+                    }
+                    else
+                    {
+                        if (bosslist.Count > 0)
+                        {
+                            target = bosslist[Random.Range(0, bosslist.Count)];
+                        }
+                    }
                 }
                 else
                 {
@@ -117,11 +128,38 @@ public class Npc : MonoBehaviour
             }
             else
             {
-                if (bosslist.Count > 0)
+                if (army.GetComponent<NpcTroop>().targetTroop != null)
                 {
-                    target = bosslist[Random.Range(0, bosslist.Count)];
+                    emylist = new List<GameObject>(army.GetComponent<NpcTroop>().targetTroop.GetComponent<EmyTroop>().emys);
+                    target = emylist[Random.Range(0, emylist.Count)];
                 }
-            }
+                else
+                {
+                    emylist = new List<GameObject>(GameObject.FindGameObjectsWithTag("Emy"));
+                    bosslist = new List<GameObject>(GameObject.FindGameObjectsWithTag("Boss"));
+                    if (Random.Range(0, 10) < 8)
+                    {
+                        if (emylist.Count > 0)
+                        {
+                            target = emylist[Random.Range(0, emylist.Count)];
+                        }
+                        else
+                        {
+                            if (bosslist.Count > 0)
+                            {
+                                target = bosslist[Random.Range(0, bosslist.Count)];
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (bosslist.Count > 0)
+                        {
+                            target = bosslist[Random.Range(0, bosslist.Count)];
+                        }
+                    }
+                }
+            }          
         }      
         if (target == null)
         {
@@ -339,7 +377,11 @@ public class Npc : MonoBehaviour
     {
         if (nearDeath)
         {
-            anim.Play("death");
+            AnimatorStateInfo state = anim.GetCurrentAnimatorStateInfo(0);
+            if (!state.IsName("death"))
+            {
+                anim.Play("death", 0, 0);
+            }
         }
         else if (hitted||hitted_state)
         {

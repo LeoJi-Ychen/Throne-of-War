@@ -1,9 +1,12 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
-using System.Collections.Generic;
 
 public class EnemyController : MonoBehaviour
 {
+    private float gravity = -9.81f;
+    private float velocityY;
     public bool elite;
     public GameObject player;
     private CharacterController controller;
@@ -28,12 +31,21 @@ public class EnemyController : MonoBehaviour
             model.shadowCastingMode = ShadowCastingMode.Off;
         }
     }
-
+    private void OnEnable()
+    {
+        stop = false;
+    }
     // Update is called once per frame
     void Update()
     {
+        if (!GetComponent<Enemy>().enabled)
+        {
+            Gravity();
+        }
+        target = GetComponent<Enemy>().target;
         if(player != null)
         {
+            float sq_dis = sqdistance(player);
             if (elite)
             {
                 if (GetComponent<Enemy>().target != player)
@@ -43,7 +55,7 @@ public class EnemyController : MonoBehaviour
                 }
             }
             state_timer += Time.deltaTime;
-            if (distance(player) > 20)
+            if (sq_dis > 225)
             {
                 if (GetComponent<Enemy>().enabled)
                 {
@@ -53,6 +65,7 @@ public class EnemyController : MonoBehaviour
                     GetComponent<EnemyUI>().enabled = false;
                     GetComponent<EnemyUI>().canvas.SetActive(false);
                     GetComponent<Enemy>().weapon.GetComponent<EnemyWeapon>().isAttack = false;
+                    GetComponent<EmySound>().enabled = false;
                     foreach (var model in models)
                     {
                         model.shadowCastingMode = ShadowCastingMode.Off;
@@ -68,6 +81,7 @@ public class EnemyController : MonoBehaviour
                     {
                         GetComponent<Enemy>().enabled = true;
                         GetComponent<EnemyUI>().enabled = true;
+                        GetComponent<EmySound>().enabled = true;
                         GetComponent<Enemy>().behavior_state = 3;
                         stop = false;
                         foreach (var model in models)
@@ -80,13 +94,14 @@ public class EnemyController : MonoBehaviour
         }
         if(!GetComponent<Enemy>().enabled)
         {
+            
             if(target == null)
             {
                 target = GetComponent<Enemy>().target;
             }
             else
             {
-                if (distance(target) > 1.2f)
+                if (sqdistance(target) > 1.44f)
                 {
                     if (stop)
                     {
@@ -110,5 +125,18 @@ public class EnemyController : MonoBehaviour
     {
         float res = (obj.transform.position - transform.position).magnitude;
         return res;
+    }
+    float sqdistance(GameObject obj)
+    {
+        float res = (obj.transform.position - transform.position).sqrMagnitude;
+        return res;
+    }
+    void Gravity()
+    {
+        velocityY += gravity * Time.deltaTime;
+
+        controller.Move(
+            Vector3.up * velocityY * Time.deltaTime
+        );
     }
 }

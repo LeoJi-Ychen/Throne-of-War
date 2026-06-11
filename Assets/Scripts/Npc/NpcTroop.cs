@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System;
 public class NpcTroop : MonoBehaviour
 {
     public GameObject targetTroop;
@@ -25,6 +24,16 @@ public class NpcTroop : MonoBehaviour
             Npcs.Add(transform.GetChild(i).gameObject);
         }
         state = true;
+        foreach (GameObject n in Npcs)
+        {
+            n.GetComponent<Npc>().enabled = true;
+            n.GetComponent<Npc>().weapon.SetActive(true);
+            n.GetComponent<NpcController>().enabled = true;
+            n.GetComponent<NpcUI>().enabled = true;
+            n.GetComponent<SimpleMove>().enabled = false;
+            n.GetComponent<CharacterController>().excludeLayers = 0;
+            n.GetComponent<Npc>().army = this.gameObject;
+        }
     }
     private void OnEnable()
     {
@@ -58,19 +67,11 @@ public class NpcTroop : MonoBehaviour
                     n.GetComponent<SimpleMove>().enabled = true;
                     n.GetComponent<SimpleMove>().aim = home;
                     n.GetComponent<CharacterController>().excludeLayers = LayerMask.GetMask("Role");
-                }
-                foreach (GameObject n in targetTroop.GetComponent<EmyTroop>().emys)
-                {
-                    n.GetComponent<Enemy>().enabled = false;
-                    n.GetComponent<Enemy>().weapon.SetActive(false);
-                    n.GetComponent<Enemy>().anim.Play("run");
-                    n.GetComponent<EnemyController>().enabled = false;
-                    n.GetComponent<EnemyUI>().enabled = false;
-                    n.GetComponent<EnemyUI>().canvas.SetActive(false);
-                    n.GetComponent<SimpleMove>().enabled = true;
-                    n.GetComponent<SimpleMove>().aim = home;
-                    n.GetComponent<CharacterController>().excludeLayers = LayerMask.GetMask("Role");
-                }
+                    CombatManager cm = player.GetComponent<CombatManager>();
+                    targetTroop.GetComponent<NpcTroop>().targetTroop =
+                        cm.battleGroups_0[Random.Range(0, cm.battleGroups_0.Count)].npctroop;
+                    targetTroop.GetComponent<NpcTroop>().SetSoldier();
+                }              
             }
             retreat_timer += Time.deltaTime;
             if (retreat_timer > 10)
@@ -96,6 +97,25 @@ public class NpcTroop : MonoBehaviour
                         Npcs[i].GetComponent<Npc>().target = targetTroop.GetComponent<EmyTroop>().emys[j];
                         j++;
                     }  
+                }
+            }
+        }
+    }
+    public void SetSoldier()
+    {
+        if (state && targetTroop.GetComponent<EmyTroop>().state)
+        {
+            int j = 0;
+            for (int i = 0; i < Npcs.Count; i++)
+            {
+                if (j >= targetTroop.GetComponent<EmyTroop>().emys.Count)
+                {
+                    j = 0;
+                }
+                if (j < targetTroop.GetComponent<EmyTroop>().emys.Count)
+                {
+                    Npcs[i].GetComponent<Npc>().target = targetTroop.GetComponent<EmyTroop>().emys[j];
+                    j++;
                 }
             }
         }

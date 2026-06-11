@@ -3,7 +3,7 @@ using UnityEngine;
 public class SandFogController : MonoBehaviour
 {
     public Color fogColor = new Color(0.75f, 0.65f, 0.45f);
-    public float fogStart = 40f;
+    public float fogStart = 30f;
     public float fogEnd = 60f;
 
     void Start()

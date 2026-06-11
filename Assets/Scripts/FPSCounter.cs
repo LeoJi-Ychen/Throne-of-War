@@ -31,7 +31,7 @@ public class FPSCounter : MonoBehaviour
         float fps = 1.0f / deltaTime;
 
         GUI.Label(
-            new Rect(10, 10, 200, 40),
+            new Rect(10, 150, 200, 40),
             $"FPS: {fps:F1}",fpsStyle);
     }
 }

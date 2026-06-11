@@ -4,6 +4,8 @@ using UnityEngine.Rendering;
 
 public class NpcController : MonoBehaviour
 {
+    private float gravity = -9.81f;
+    private float velocityY;
     public GameObject audio_encourage;
     public GameObject audio_charge;
     public GameObject player;
@@ -26,23 +28,34 @@ public class NpcController : MonoBehaviour
         sound_looptimer = Random.Range(0.5f, 2f);
         sound_looptimer -= 0.5f;
     }
-
+    private void OnEnable()
+    {
+        stop = false;
+    }
     // Update is called once per frame
     void Update()
     {
+        if (!GetComponent<Npc>().enabled)
+        {
+            Gravity();
+        }
+        target = GetComponent<Npc>().target;
         state_timer += Time.deltaTime;
         if (player != null)
         {
+            float sq_dis = sqdistance(player);
             if (player.GetComponent<Commander>().OrderID != 1)
             {
                 GetComponent<Npc>().enabled = false;
                 GetComponent<Npc>().anim.Play("encourage");
-                if (distance(player) > 20)
+                if (sq_dis > 225)
                 {
                     if (GetComponent<NpcUI>().enabled)
                     {
                         GetComponent<NpcUI>().enabled = false;
                         GetComponent<NpcUI>().canvas.SetActive(false);
+                        audio_charge.GetComponent<AudioSource>().enabled = false;
+                        audio_charge.GetComponent<AudioSource>().enabled = false;
                         foreach (var model in models)
                         {
                             model.shadowCastingMode = ShadowCastingMode.Off;
@@ -57,6 +70,8 @@ public class NpcController : MonoBehaviour
                         if (!GetComponent<NpcUI>().enabled)
                         {
                             GetComponent<NpcUI>().enabled = true;
+                            audio_charge.GetComponent<AudioSource>().enabled = true;
+                            audio_charge.GetComponent<AudioSource>().enabled = true;
                             foreach (var model in models)
                             {
                                 model.shadowCastingMode = ShadowCastingMode.On;
@@ -70,10 +85,18 @@ public class NpcController : MonoBehaviour
                     if (sound_looptimer > 2)
                     {
                         sound_looptimer = 0;
-                        audio_encourage.GetComponent<AudioSource>().Play();
+                        if (audio_encourage.GetComponent<AudioSource>().enabled)
+                        {
+                            audio_encourage.GetComponent<AudioSource>().Play();
+                        }                       
                     }
                 }
                 return;
+            }
+            if (!charge)
+            {
+                charge = true;
+                GetComponent<Npc>().anim.Play("run");
             }
             if (sound_state==0)
             {
@@ -86,16 +109,14 @@ public class NpcController : MonoBehaviour
                 if (sound_timer > 2)
                 {
                     sound_state = 2;
-                    audio_charge.GetComponent<AudioSource>().Play();
+                    if (audio_charge.GetComponent<AudioSource>().enabled)
+                    {
+                        audio_charge.GetComponent<AudioSource>().Play();
+                    }
                 }
             }
-            if (distance(player) > 20)
+            if (sq_dis > 225)
             {
-                if (!charge)
-                {
-                    charge = true;
-                    GetComponent<Npc>().anim.Play("run");
-                }
                 if (GetComponent<Npc>().enabled)
                 {
                     GetComponent<Npc>().Birth();
@@ -115,11 +136,6 @@ public class NpcController : MonoBehaviour
                 if (state_timer > 2)
                 {
                     state_timer = 0;
-                    if (!charge)
-                    {
-                        charge = true;
-                        GetComponent<Npc>().anim.Play("run");
-                    }
                     if (!GetComponent<Npc>().enabled)
                     {
                         GetComponent<Npc>().behavior_state = 3;
@@ -142,7 +158,7 @@ public class NpcController : MonoBehaviour
             }
             else
             {
-                if (distance(target) > 1.5f)
+                if (sqdistance(target) > 2.25f)
                 {
                     if (stop)
                     {
@@ -167,5 +183,18 @@ public class NpcController : MonoBehaviour
     {
         float res = (obj.transform.position - transform.position).magnitude;
         return res;
+    }
+    float sqdistance(GameObject obj)
+    {
+        float res = (obj.transform.position - transform.position).sqrMagnitude;
+        return res;
+    }
+    void Gravity()
+    {
+        velocityY += gravity * Time.deltaTime;
+
+        controller.Move(
+            Vector3.up * velocityY * Time.deltaTime
+        );
     }
 }

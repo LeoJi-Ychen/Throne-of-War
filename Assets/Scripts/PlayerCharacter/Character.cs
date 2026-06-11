@@ -1,7 +1,10 @@
+using System;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class Character : MonoBehaviour
 {
+    public static Action<float> getDamage;
     public GameObject audio_hitted;
     public GameObject audio_hit;
     public GameObject weapon;
@@ -18,12 +21,15 @@ public class Character : MonoBehaviour
     public float dead_timer;
     public bool invincible;
     float invincible_timer;
-
+    float skill_timer;
+    float skill_cd;
+    public bool single;
     private void Awake()
     {
         maxblood = 100;
         blood = maxblood;
         damage = 10;
+        skill_cd = 30;
     }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -34,6 +40,32 @@ public class Character : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (!CombatManager.isDuel)
+        {
+            skill_timer += Time.deltaTime;
+        }
+        if (skill_timer > skill_cd) 
+        {
+            if (CombatManager.boss != null&&!CombatManager.isDuel)
+            {
+                single = true;
+                if (Keyboard.current.vKey.wasPressedThisFrame)
+                {
+                    skill_timer = 0;
+                    CombatManager.isDuel = true;
+                    GetComponent<CombatManager>().AllTroop.SetActive(false);
+                    GetComponent<CombatManager>().Arena.SetActive(true);
+                }
+            }
+            else
+            {
+                single = false;
+            }
+        }
+        else
+        {
+            single = false;
+        }
         if (invincible)
         {
             invincible_timer += Time.deltaTime;
@@ -45,12 +77,29 @@ public class Character : MonoBehaviour
         }
         if (blood <= 0)
         {
-            if (!nearDeath)
+            if(CombatManager.isDuel)
             {
-                GetComponent<CombatManager>().playerforces -= 100;
-                nearDeath = true;
-                weapon.SetActive(false);
-            }           
+                blood = 1;
+                CombatManager.isDuel = false;
+                GetComponent<CombatManager>().AllTroop.SetActive(true);
+                GetComponent<CombatManager>().Arena.SetActive(false);
+                GetComponent<CombatManager>().emyforces += (GetComponent<CombatManager>().maxemyforces / 10);
+                GetComponent<CombatManager>().playerforces -= (GetComponent<CombatManager>().maxplayerforces / 10);
+            }
+            else
+            {
+                blood = 1;
+                GetComponent<CombatManager>().playerforces -= 10;
+            }         
+            if (false)
+            {
+                if (!nearDeath)
+                {
+                    GetComponent<CombatManager>().playerforces -= 100;
+                    nearDeath = true;
+                    weapon.SetActive(false);
+                }
+            }                 
         }
         if(nearDeath)
         {
@@ -82,6 +131,7 @@ public class Character : MonoBehaviour
             }
             //audio_hitted.GetComponent<AudioSource>().Stop();
             audio_hitted.GetComponent<AudioSource>().PlayOneShot(audio_hitted.GetComponent<AudioSource>().clip);
+            getDamage?.Invoke(damage);
         }
     }
     public void BeHealed(int heal)

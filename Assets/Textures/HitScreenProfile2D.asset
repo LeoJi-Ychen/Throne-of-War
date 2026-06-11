@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46e5abc6062133a458a7050a800e927f, type: 3}
+  m_Name: HitScreenProfile2D
+  m_EditorClassIdentifier: Assembly-CSharp::ApexHitScreen2D.ApexHitScreenProfile2D
+  vignetteSprite: {fileID: 21300000, guid: 282ed84bd33e9c647a68d9abd3201e3d, type: 3}
+  bloodSprite: {fileID: 21300000, guid: 434aa521a93149348a64390cb95a7ec6, type: 3}
+  vignetteColor: {r: 0.18, g: 0, b: 0, a: 1}
+  lowHealthVignetteMaxAlpha: 0.6
+  damageVignettePerHit: 0.9
+  vignetteFadeOutSpeed: 1.75
+  vignetteAttackSpeed: 18
+  bloodColor: {r: 0.29411766, g: 0, b: 0, a: 1}
+  lowHealthBloodMaxAlpha: 0.4
+  damageBloodPerHit: 0.9
+  bloodFadeOutSpeed: 1.2
+  bloodAttackSpeed: 22
+  enableLowHealthPulse: 1
+  pulseStartsBelowHealth01: 0.45
+  pulseMaxExtraAlpha: 0.12
+  pulseFrequency: 2.6
+  enableFlash: 1
+  flashColor: {r: 0.85, g: 0, b: 0, a: 1}
+  flashPerHit: 0.8
+  flashFadeOutSpeed: 3.8
+  scaleWithDamageAmount: 1
+  referenceDamage: 20
+  minDamageScale: 0.35
+  maxDamageScale: 2
+  useUnscaledTime: 0

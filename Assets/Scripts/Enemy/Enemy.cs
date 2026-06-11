@@ -11,6 +11,7 @@ public class Enemy : MonoBehaviour
 {
     public int troopID;
     public GameObject player;
+    public GameObject army;
     public List<GameObject> npclist = new List<GameObject>();
     public GameObject target;
     public GameObject weapon;
@@ -71,53 +72,115 @@ public class Enemy : MonoBehaviour
     }
     void ResetTarget()
     {
-        npclist = new List<GameObject>(GameObject.FindGameObjectsWithTag("NPC"));
-        List<GameObject> nearnpclist = new List<GameObject>();
-        foreach (GameObject n in npclist)
+        if (army == null)
         {
-            if (distance(n) < 5)
+            npclist = new List<GameObject>(GameObject.FindGameObjectsWithTag("NPC"));
+            List<GameObject> nearnpclist = new List<GameObject>();
+            foreach (GameObject n in npclist)
             {
-                nearnpclist.Add(n);
+                if (distance(n) < 5)
+                {
+                    nearnpclist.Add(n);
+                }
             }
-        }
-        if (nearnpclist.Count > 0)
-        {
-            if (distance(player) < 8)
+            if (nearnpclist.Count > 0)
             {
-                if (Random.Range(0, 10) < 5)
+                if (distance(player) < 8)
+                {
+                    if (Random.Range(0, 10) < 5)
+                    {
+                        target = nearnpclist[Random.Range(0, nearnpclist.Count)];
+                        target.GetComponent<Npc>().target = this.gameObject;
+                    }
+                    else
+                    {
+                        target = player;
+                    }
+                }
+                else
                 {
                     target = nearnpclist[Random.Range(0, nearnpclist.Count)];
                     target.GetComponent<Npc>().target = this.gameObject;
                 }
+            }
+            else
+            {
+                if (Random.Range(0, 10) < 6)
+                {
+                    if (npclist.Count > 0)
+                    {
+                        target = npclist[Random.Range(0, npclist.Count)];
+                        target.GetComponent<Npc>().target = this.gameObject;
+                    }
+                    else
+                    {
+                        target = player;
+                    }
+                }
                 else
                 {
                     target = player;
                 }
-            }
-            else
-            {
-                target = nearnpclist[Random.Range(0, nearnpclist.Count)];
-                target.GetComponent<Npc>().target = this.gameObject;
             }
         }
         else
         {
-            if (Random.Range(0, 10) < 6)
+            if (army.GetComponent<EmyTroop>().targetTroop != null)
             {
-                if (npclist.Count > 0)
-                {
-                    target = npclist[Random.Range(0, npclist.Count)];
-                    target.GetComponent<Npc>().target = this.gameObject;
-                }
-                else
-                {
-                    target = player;
-                }
+                npclist = new List<GameObject>(army.GetComponent<EmyTroop>().targetTroop.GetComponent<NpcTroop>().Npcs);
+                target = npclist[Random.Range(0, npclist.Count)];
             }
             else
             {
-                target = player;
-            }
+                npclist = new List<GameObject>(GameObject.FindGameObjectsWithTag("NPC"));
+                List<GameObject> nearnpclist = new List<GameObject>();
+                foreach (GameObject n in npclist)
+                {
+                    if (distance(n) < 5)
+                    {
+                        nearnpclist.Add(n);
+                    }
+                }
+                if (nearnpclist.Count > 0)
+                {
+                    if (distance(player) < 8)
+                    {
+                        if (Random.Range(0, 10) < 5)
+                        {
+                            target = nearnpclist[Random.Range(0, nearnpclist.Count)];
+                            target.GetComponent<Npc>().target = this.gameObject;
+                        }
+                        else
+                        {
+                            target = player;
+                        }
+                    }
+                    else
+                    {
+                        target = nearnpclist[Random.Range(0, nearnpclist.Count)];
+                        target.GetComponent<Npc>().target = this.gameObject;
+                    }
+                }
+                else
+                {
+                    if (Random.Range(0, 10) < 6)
+                    {
+                        if (npclist.Count > 0)
+                        {
+                            target = npclist[Random.Range(0, npclist.Count)];
+                            target.GetComponent<Npc>().target = this.gameObject;
+                        }
+                        else
+                        {
+                            target = player;
+                        }
+                    }
+                    else
+                    {
+                        target = player;
+                    }
+                }
+            }                
         }       
     }
     float distance(GameObject obj)
@@ -373,7 +436,11 @@ public class Enemy : MonoBehaviour
     {
         if (nearDeath)
         {
-            anim.Play("death");
+            AnimatorStateInfo state = anim.GetCurrentAnimatorStateInfo(0);
+            if (!state.IsName("death"))
+            {
+                anim.Play("death", 0, 0);
+            }
         }
         else if (hitted||hitted_state)
         {

@@ -152,6 +152,20 @@ public class EnemyBoss : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (CombatManager.boss ==null)
+        {
+            if (distance(player) < 10)
+            {
+                CombatManager.boss = this.gameObject;
+            }
+        }
+        else
+        {
+            if (distance(player) > 12)
+            {
+                CombatManager.boss = null;
+            }
+        }
         if (invincible)
         {
             invincible_timer += Time.deltaTime;
@@ -197,27 +211,41 @@ public class EnemyBoss : MonoBehaviour
         weapon.GetComponent<EnemyWeapon>().damage = damage;
         if (blood <= 0)
         {
-            if (life > 0)
+            if(CombatManager.isDuel && CombatManager.boss == this.gameObject)
             {
-                life--;
-                blood = maxblood;
-                hitted = false;
-                hitted_state = false;
-                sitting = true;
-                sitting_timer = 0;
-                weapon.GetComponent<EnemyWeapon>().isAttack = false;
-                isAttacking = false;
-                atk_mode = 0;
-                atk_count = 0;
+                blood = maxblood / 2;
                 behavior_state = 0;
-                behaviorDuration = 2;
-                player.GetComponent<CombatManager>().emyforces -= 200;
+                behavior_timer = 0;
+                CombatManager.isDuel = false;
+                player.GetComponent<CombatManager>().AllTroop.SetActive(true);
+                player.GetComponent<CombatManager>().Arena.SetActive(false);
+                player.GetComponent<CombatManager>().emyforces -= (player.GetComponent<CombatManager>().maxemyforces / 10);
+                player.GetComponent<CombatManager>().playerforces += (player.GetComponent<CombatManager>().maxplayerforces / 10);
             }
             else
             {
-                nearDeath = true;
-                player.GetComponent<CombatManager>().emyforces -= 10000;
-            }
+                if (life > 0)
+                {
+                    life--;
+                    blood = maxblood;
+                    hitted = false;
+                    hitted_state = false;
+                    sitting = true;
+                    sitting_timer = 0;
+                    weapon.GetComponent<EnemyWeapon>().isAttack = false;
+                    isAttacking = false;
+                    atk_mode = 0;
+                    atk_count = 0;
+                    behavior_state = 0;
+                    behavior_timer = 2;
+                    player.GetComponent<CombatManager>().emyforces -= 200;
+                }
+                else
+                {
+                    nearDeath = true;
+                    player.GetComponent<CombatManager>().emyforces -= 10000;
+                }
+            }          
         }
         if (nearDeath)
         {
@@ -267,22 +295,25 @@ public class EnemyBoss : MonoBehaviour
     }
     public void BeAttacked(int damage, int mode = 0)
     {
-        blood -= damage;
-        if (!invincible||mode>=1)
+        if (!sitting)
         {
-            hitted = true;
-            target = player;
-            weapon.GetComponent<EnemyWeapon>().isAttack = false;
-            audio_hitted.GetComponent<AudioSource>().Play();
-        }
-        if (mode > 2)
-        {
-            redflash = true;
-        }
-        behavior_timer = 2;
-        behavior_state = 0;
-        atk_mode = 0;
-        player.GetComponent<CombatManager>().emyforces -= 1;
+            blood -= damage;
+            if (!invincible || mode >= 1)
+            {
+                hitted = true;
+                target = player;
+                weapon.GetComponent<EnemyWeapon>().isAttack = false;
+                audio_hitted.GetComponent<AudioSource>().Play();
+            }
+            if (mode > 2)
+            {
+                redflash = true;
+            }
+            behavior_timer = 2;
+            behavior_state = 0;
+            atk_mode = 0;
+            player.GetComponent<CombatManager>().emyforces -= 1;
+        }      
     }
     public void BeHealed(int heal)
     {

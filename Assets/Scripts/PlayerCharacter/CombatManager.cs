@@ -10,22 +10,26 @@ public class CombatManager : MonoBehaviour
     public GameObject audio_win;
     public GameObject audio_loss;
     public GameObject audio_horn;
+    public int maxplayerforces;
+    public int maxemyforces;
     public int playerforces;
     public int emyforces;
     public int battleSituation;
     int state;
     int laststate;
+    public static GameObject boss;  
+    public GameObject Arena;
+    public GameObject AllTroop;
     public GameObject emyEliteTroop_0;
     public GameObject emyEliteTroop_1;
-    public List<BattleGroup> battleGroups = new List<BattleGroup>();
+    //public List<BattleGroup> battleGroups = new List<BattleGroup>();
     public List<BattleGroup> battleGroups_0 = new List<BattleGroup>();
-    public List<BattleGroup> battleGroups_p = new List<BattleGroup>();
-    public List<BattleGroup> battleGroups_e = new List<BattleGroup>();
+    public List<BattleGroup> battleGroups_1 = new List<BattleGroup>();
     public int gameRes;// 1-win 2-lose
     public bool InitReady;
     public bool battlefieldChange;
     float combat_timer;
-
+    public static bool isDuel;
     [Serializable]
     public  struct BattleGroup
     {
@@ -49,6 +53,14 @@ public class CombatManager : MonoBehaviour
         {
             npctroop.GetComponent<NpcTroop>().retreat = true;
         }
+        public void EmySetFalse()
+        {
+            emytroop.SetActive(false);
+        }
+        public void NpcSetFalse()
+        {
+            npctroop.SetActive(false);
+        }
         public void Init()
         {
             npctroop.GetComponent<NpcTroop>().targetTroop = emytroop;
@@ -60,31 +72,25 @@ public class CombatManager : MonoBehaviour
         CombatData data = LoadStructFromJson<CombatData>("combatdata");
         if(data != null )
         {
-
+            
         }
         else
         {
-            playerforces = 1000;
-            emyforces = 1000;
+            maxplayerforces = 1900;
+            maxemyforces = 1000;        
         }
+        playerforces = maxplayerforces;
+        emyforces = maxemyforces;
     }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         laststate = -2;
-        foreach (BattleGroup battleGroup in battleGroups)
-        {
-            battleGroup.Init();
-        }
         foreach (BattleGroup battleGroup in battleGroups_0)
         {
             battleGroup.Init();
         }
-        foreach (BattleGroup battleGroup in battleGroups_p)
-        {
-            battleGroup.Init();
-        }
-        foreach (BattleGroup battleGroup in battleGroups_e)
+        foreach (BattleGroup battleGroup in battleGroups_1)
         {
             battleGroup.Init();
         }
@@ -96,6 +102,14 @@ public class CombatManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (emyforces > maxemyforces)
+        {
+            emyforces = maxemyforces;
+        }
+        if(playerforces > maxplayerforces)
+        {
+            playerforces = maxplayerforces;
+        }
         if (!InitReady)
         {
             return;
@@ -116,7 +130,10 @@ public class CombatManager : MonoBehaviour
         StateManage();
         SetBattleTroopInCombat();
         Judgement();
-        Combat();
+        if (!isDuel)
+        {
+            Combat();
+        }   
     }
     void StateManage()
     {
@@ -141,51 +158,41 @@ public class CombatManager : MonoBehaviour
             {
                 emyEliteTroop_0.SetActive(true);
                 emyEliteTroop_1.SetActive(true);
-                foreach (BattleGroup battleGroup in battleGroups_e)
+                foreach (BattleGroup battleGroup in battleGroups_0)
                 {
                     battleGroup.SetActive();
                 }
-                foreach (BattleGroup battleGroup in battleGroups_0)
+                foreach (BattleGroup battleGroup in battleGroups_1)
                 {
-                    battleGroup.SetFalse();
-                }
-                foreach (BattleGroup battleGroup in battleGroups_p)
-                {
-                    battleGroup.SetFalse();
+                    battleGroup.SetActive();
+                    battleGroup.NpcSetFalse();
                 }
             }
             else if (state == 1)
             {
                 emyEliteTroop_0.SetActive(true);
                 emyEliteTroop_1.SetActive(false);
-                foreach (BattleGroup battleGroup in battleGroups_e)
-                {
-                    battleGroup.SetFalse();
-                }
                 foreach (BattleGroup battleGroup in battleGroups_0)
                 {
-                    battleGroup.SetFalse();
+                    battleGroup.SetActive();
                 }
-                foreach (BattleGroup battleGroup in battleGroups_p)
+                foreach (BattleGroup battleGroup in battleGroups_1)
                 {
                     battleGroup.SetActive();
+                    battleGroup.EmySetFalse();
                 }
             }
             else
             {
                 emyEliteTroop_0.SetActive(false);
                 emyEliteTroop_1.SetActive(true);
-                foreach (BattleGroup battleGroup in battleGroups_e)
-                {
-                    battleGroup.SetFalse();
-                }
                 foreach (BattleGroup battleGroup in battleGroups_0)
                 {
                     battleGroup.SetActive();
                 }
-                foreach (BattleGroup battleGroup in battleGroups_p)
+                foreach (BattleGroup battleGroup in battleGroups_1)
                 {
-                    battleGroup.SetFalse();
+                    battleGroup.SetActive();
                 }
             }
             laststate = state;
@@ -202,15 +209,7 @@ public class CombatManager : MonoBehaviour
             {
                 emyEliteTroop_0.SetActive(true);
                 emyEliteTroop_1.SetActive(true);
-                foreach (BattleGroup battleGroup in battleGroups_e)
-                {
-                    battleGroup.SetActive();
-                }
-                foreach (BattleGroup battleGroup in battleGroups_0)
-                {
-                    battleGroup.NpcRetreat();
-                }
-                foreach (BattleGroup battleGroup in battleGroups_p)
+                foreach (BattleGroup battleGroup in battleGroups_1)
                 {
                     battleGroup.NpcRetreat();
                 }
@@ -219,35 +218,15 @@ public class CombatManager : MonoBehaviour
             {
                 emyEliteTroop_0.SetActive(true);
                 emyEliteTroop_1.SetActive(false);
-                foreach (BattleGroup battleGroup in battleGroups_e)
+                foreach (BattleGroup battleGroup in battleGroups_1)
                 {
                     battleGroup.EmyRetreat();
-                }
-                foreach (BattleGroup battleGroup in battleGroups_0)
-                {
-                    battleGroup.EmyRetreat();
-                }
-                foreach (BattleGroup battleGroup in battleGroups_p)
-                {
-                    battleGroup.SetActive();
                 }
             }
             else
             {
                 emyEliteTroop_0.SetActive(false);
                 emyEliteTroop_1.SetActive(true);
-                foreach (BattleGroup battleGroup in battleGroups_e)
-                {
-                    battleGroup.EmyRetreat();
-                }
-                foreach (BattleGroup battleGroup in battleGroups_0)
-                {
-                    battleGroup.SetActive();
-                }
-                foreach (BattleGroup battleGroup in battleGroups_p)
-                {
-                    battleGroup.NpcRetreat();
-                }
             }
             laststate = state;
         }

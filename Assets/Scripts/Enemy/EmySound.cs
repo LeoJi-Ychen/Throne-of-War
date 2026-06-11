@@ -12,6 +12,20 @@ public class EmySound : MonoBehaviour
         player = GameObject.FindWithTag("Player");
         sound_timer = Random.Range(3f, 5f);
     }
+    private void OnEnable()
+    {
+        foreach(AudioSource source in audio_list)
+        {
+            source.enabled = true;
+        }
+    }
+    private void OnDisable()
+    {
+        foreach (AudioSource source in audio_list)
+        {
+            source.enabled = false;
+        }
+    }
 
     // Update is called once per frame
     void Update()

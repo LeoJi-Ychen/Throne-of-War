@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -6,23 +7,63 @@ using static UnityEngine.GraphicsBuffer;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerUnitMove : MonoBehaviour
 {
+    public AreaGraph graph;
     public Animator anim;
     public float speed = 3;
+    public float stopDistance = 0.2f;
     private CharacterController controller;
+    public Vector3 targetLocation_last;
     public Vector3 targetLocation;
-    public bool action;    
+    public bool action;
+    private List<Vector3> movePath;
+    private int currentIndex;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         controller = GetComponent<CharacterController>();
     }
-
+    public void SetPath(List<Vector3> path)
+    {
+        movePath = path;
+        currentIndex = 0;
+    }
     // Update is called once per frame
     void Update()
     {
         if (action)
         {
-            MoveToTarget();
+            if(targetLocation != targetLocation_last)
+            {
+                AreaNode endNode = null;
+                endNode = graph.FindArea(targetLocation);
+                if (endNode != null)
+                {
+                    AreaNode startNode = graph.FindArea(transform.position);
+                    List<AreaNode> areaPath = new List<AreaNode>();
+                    List<Vector3> path = new List<Vector3>();
+                    if (graph.FindPath(startNode, endNode) != null)
+                    {
+                        areaPath = new List<AreaNode>(graph.FindPath(startNode, endNode));
+                    }
+                    if (areaPath.Count > 0)
+                    {
+                        path = new List<Vector3>(graph.ConvertAreaPathToWorldPath(areaPath, targetLocation));
+                        SetPath(path);
+                        targetLocation_last = targetLocation;
+                    }
+                    else
+                    {
+                        if (startNode == endNode)
+                        {
+                            path = new List<Vector3>(graph.ConvertAreaPathToWorldPath(areaPath, targetLocation));
+                            SetPath(path);
+                            targetLocation_last = targetLocation;
+                        }
+                    }
+                }
+            }
+            //MoveToTarget();
+            MoveAlongPath();
         }
     }
     void MoveToTarget()
@@ -31,6 +72,40 @@ public class PlayerUnitMove : MonoBehaviour
         Vector3 aim = targetLocation;
         aim.y = transform.position.y;
         transform.LookAt(aim);
+        if (distanceToTarget(targetLocation) < 1)
+        {
+            action = false;
+            anim.Play("idle01");
+        }
+        else
+        {
+            anim.Play("run");
+        }
+    }
+    private void MoveAlongPath()
+    {
+        if (movePath == null || currentIndex >= movePath.Count)
+            return;
+
+        Vector3 target = movePath[currentIndex];
+
+        Vector3 dir = target - transform.position;
+        dir.y = 0;
+
+        if (dir.magnitude <= stopDistance)
+        {
+            currentIndex++;
+            return;
+        }
+
+        Vector3 move = dir.normalized * speed * Time.deltaTime;
+
+        controller.Move(move);
+
+        transform.rotation = Quaternion.RotateTowards(
+            transform.rotation,
+            Quaternion.LookRotation(dir),
+            360f * Time.deltaTime);
         if (distanceToTarget(targetLocation) < 1)
         {
             action = false;
