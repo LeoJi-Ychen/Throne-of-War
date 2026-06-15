@@ -148,7 +148,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 613eb46d9a2019f4383dd0664c6a651e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyUnit
-  sceneName: Battlefield
+  preWar: 0
+  orderId: 0
+  graph: {fileID: 0}
+  anim: {fileID: 6851041598194059781}
+  speed: 3
+  stopDistance: 0.2
+  targetLocation_last: {x: 0, y: 0, z: 0}
+  targetLocation: {x: 0, y: 0, z: 0}
+  action: 0
 --- !u!1 &8761513811284816370
 GameObject:
   m_ObjectHideFlags: 0
@@ -332,6 +340,11 @@ PrefabInstance:
 --- !u!4 &717170604770709631 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 15d0fc77aabdbba4ea5d4d9c3cbbcb3d, type: 3}
+  m_PrefabInstance: {fileID: 1042969933707261844}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &6851041598194059781 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 15d0fc77aabdbba4ea5d4d9c3cbbcb3d, type: 3}
   m_PrefabInstance: {fileID: 1042969933707261844}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &5550443656581204468

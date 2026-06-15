@@ -1,16 +1,27 @@
+using System;
 using UnityEngine;
+using System.IO;
 
-public class CombatData : MonoBehaviour
+[Serializable]
+public class CombatData
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public int playerforce;
+    public int emyforce;
+    public static CombatData LoadStructFromJson()
     {
-        
+        string path = Application.dataPath + @"/StreamingAssets/Data/" + "Combat" + ".json";
+        if (!File.Exists(path))
+        {
+            return default;
+        }
+        string jsonString = File.ReadAllText(path);
+        CombatData data = JsonUtility.FromJson<CombatData>(jsonString);
+        return data;
     }
-
-    // Update is called once per frame
-    void Update()
+    public void SaveStructToJson()
     {
-        
+        string path = Application.dataPath + @"/StreamingAssets/Data/" + "Combat" + ".json";
+        string jsonString = JsonUtility.ToJson(this);
+        File.WriteAllText(path, jsonString);
     }
 }

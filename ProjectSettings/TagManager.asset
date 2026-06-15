@@ -7,6 +7,7 @@ TagManager:
   - Emy
   - Boss
   - NPC
+  - Map
   layers:
   - Default
   - TransparentFX
@@ -17,7 +18,7 @@ TagManager:
   - Weapon
   - Role
   - Ground
-  - 
+  - Unit
   - 
   - 
   - 

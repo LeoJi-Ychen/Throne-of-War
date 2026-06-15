@@ -3,12 +3,8 @@ using UnityEngine.InputSystem;
 
 public class CursorController : MonoBehaviour
 {
-    private bool cursorLocked = false;
+    private static bool cursorLocked = false;
 
-    private void Start()
-    {
-        HideCursor();
-    }
     void Update()
     {
         if (Keyboard.current.tabKey.wasPressedThisFrame)
@@ -32,7 +28,7 @@ public class CursorController : MonoBehaviour
             Cursor.lockState = CursorLockMode.None;
         }
     }
-    void HideCursor()
+    public static void HideCursor()
     {
         cursorLocked = true;
         Cursor.visible = false;

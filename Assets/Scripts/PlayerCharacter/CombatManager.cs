@@ -69,10 +69,14 @@ public class CombatManager : MonoBehaviour
     }
     private void Awake()
     {
-        CombatData data = LoadStructFromJson<CombatData>("combatdata");
+        CombatData data = CombatData.LoadStructFromJson();
+        boss = null;
+        isDuel = false;
+        Fighting = false;
         if(data != null )
         {
-            
+            maxplayerforces = data.playerforce;
+            maxemyforces = data.emyforce;
         }
         else
         {

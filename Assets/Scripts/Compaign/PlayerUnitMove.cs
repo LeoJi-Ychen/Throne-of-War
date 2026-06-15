@@ -7,6 +7,7 @@ using static UnityEngine.GraphicsBuffer;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerUnitMove : MonoBehaviour
 {
+    public bool preWar;
     public AreaGraph graph;
     public Animator anim;
     public float speed = 3;
@@ -21,6 +22,7 @@ public class PlayerUnitMove : MonoBehaviour
     void Start()
     {
         controller = GetComponent<CharacterController>();
+        graph = GameObject.FindWithTag("Map").GetComponent<AreaGraph>();
     }
     public void SetPath(List<Vector3> path)
     {
@@ -30,9 +32,21 @@ public class PlayerUnitMove : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (preWar)
+        {
+            this.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+            controller.enabled = false;
+            anim.Play("idle01");
+            return;
+        }
+        Move();
+    }
+    void Move()
+    {
         if (action)
         {
-            if(targetLocation != targetLocation_last)
+            this.gameObject.layer = LayerMask.NameToLayer("Unit");
+            if (targetLocation != targetLocation_last)
             {
                 AreaNode endNode = null;
                 endNode = graph.FindArea(targetLocation);
@@ -41,10 +55,7 @@ public class PlayerUnitMove : MonoBehaviour
                     AreaNode startNode = graph.FindArea(transform.position);
                     List<AreaNode> areaPath = new List<AreaNode>();
                     List<Vector3> path = new List<Vector3>();
-                    if (graph.FindPath(startNode, endNode) != null)
-                    {
-                        areaPath = new List<AreaNode>(graph.FindPath(startNode, endNode));
-                    }
+                    areaPath = graph.FindPathAStar(startNode, endNode);
                     if (areaPath.Count > 0)
                     {
                         path = new List<Vector3>(graph.ConvertAreaPathToWorldPath(areaPath, targetLocation));
@@ -61,6 +72,10 @@ public class PlayerUnitMove : MonoBehaviour
                         }
                     }
                 }
+            }
+            else
+            {
+                this.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
             }
             //MoveToTarget();
             MoveAlongPath();

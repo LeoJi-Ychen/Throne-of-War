@@ -1,38 +1,129 @@
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 public class EnemyUnit : MonoBehaviour
 {
-    public static bool War;
-    public string sceneName = "Battlefield";
+    public static int eid;
+    public int ID;
+    public int troopState;
+    public bool preWar;
+    public int orderId;
+    public AreaGraph graph;
+    public Animator anim;
+    public float speed = 3;
+    public float stopDistance = 0.2f;
+    private CharacterController controller;
+
+    public Vector3 targetLocation_last;
+    public Vector3 targetLocation;
+    public bool action;
+    private List<Vector3> movePath;
+    private int currentIndex;
+    public static List<GameObject> AllEnemyUnit = new List<GameObject>();
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
+        controller = GetComponent<CharacterController>();
+        graph = GameObject.FindWithTag("Map").GetComponent<AreaGraph>();
+        ID = eid;
+        eid++;
+        controller = GetComponent<CharacterController>();
+        if (WarManager.HasData)
+        {
+            if (ID >= WarManager.data.emytroops.Count)
+            {
+                this.gameObject.SetActive(false);
+            }
+            else
+            {
+                controller.enabled = false;
+                transform.position = WarManager.data.emytroops[ID];
+                troopState = WarManager.data.emytroopsState[ID];
+                controller.enabled = true;
+            }
+
+        }
+    }
+    private void OnEnable()
+    {
+        preWar = false;
+        if (!AllEnemyUnit.Contains(this.gameObject))
+        {
+            AllEnemyUnit.Add(this.gameObject);
+        }       
+    }
+    private void OnDisable()
+    {
+        AllEnemyUnit.Remove(this.gameObject);
+    }
+    public void SetPath(List<Vector3> path)
+    {
+        movePath = path;
+        currentIndex = 0;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (!War)
+        if (preWar)
         {
-            StartBattle();
+            this.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+            controller.enabled = false;
+            anim.Play("idle");
+            return;
+        }
+        StartBattle();
+        Move();
+    }
+    void Move()
+    {
+        if (action)
+        {
+            this.gameObject.layer = LayerMask.NameToLayer("Unit");
+            if (targetLocation != targetLocation_last)
+            {
+                AreaNode endNode = null;
+                endNode = graph.FindArea(targetLocation);
+                if (endNode != null)
+                {
+                    AreaNode startNode = graph.FindArea(transform.position);
+                    List<AreaNode> areaPath = new List<AreaNode>();
+                    List<Vector3> path = new List<Vector3>();
+                    areaPath = graph.FindPathAStar(startNode, endNode);
+                    if (areaPath.Count > 0)
+                    {
+                        path = new List<Vector3>(graph.ConvertAreaPathToWorldPath(areaPath, targetLocation));
+                        SetPath(path);
+                        targetLocation_last = targetLocation;
+                    }
+                    else
+                    {
+                        if (startNode == endNode)
+                        {
+                            path = new List<Vector3>(graph.ConvertAreaPathToWorldPath(areaPath, targetLocation));
+                            SetPath(path);
+                            targetLocation_last = targetLocation;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                this.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+            }
+            MoveAlongPath();
         }
     }
     void StartBattle()
     {
-        foreach(Unit g in Unit.AllUnits)
+        foreach (var p in PlayerUnit.AllPlayerUnit)
         {
-            if(g != null)
+            if (p != null)
             {
-                if (distanceToTarget(g.gameObject) < 3)
+                if (distanceToTarget(p) < 3)
                 {
-                    War = true;
+                    WarManager.NewWar(this.gameObject,p);
                 }
             }
-        }
-        if (War)
-        {
-            SceneManager.LoadSceneAsync(sceneName);
         }
     }
     float distanceToTarget(GameObject target)
@@ -60,5 +151,39 @@ public class EnemyUnit : MonoBehaviour
         Vector3 v = (target - transform.position);
         v.y = 0;
         return v.normalized;
+    }
+    private void MoveAlongPath()
+    {
+        if (movePath == null || currentIndex >= movePath.Count)
+            return;
+
+        Vector3 target = movePath[currentIndex];
+
+        Vector3 dir = target - transform.position;
+        dir.y = 0;
+
+        if (dir.magnitude <= stopDistance)
+        {
+            currentIndex++;
+            return;
+        }
+
+        Vector3 move = dir.normalized * speed * Time.deltaTime;
+
+        controller.Move(move);
+
+        transform.rotation = Quaternion.RotateTowards(
+            transform.rotation,
+            Quaternion.LookRotation(dir),
+            360f * Time.deltaTime);
+        if (distanceToTarget(targetLocation) < 1)
+        {
+            action = false;
+            anim.Play("idle");
+        }
+        else
+        {
+            anim.Play("run");
+        }
     }
 }

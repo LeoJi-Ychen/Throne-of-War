@@ -87,6 +87,7 @@ GameObject:
   - component: {fileID: 5967453713512789177}
   - component: {fileID: 5266806905947825166}
   - component: {fileID: 4477486620107159322}
+  - component: {fileID: 3594065359971310454}
   m_Layer: 2
   m_Name: PlayerUnit
   m_TagString: Untagged
@@ -162,10 +163,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c2c2866df254ad4789e7d5049ea22d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerUnitMove
+  graph: {fileID: 0}
   anim: {fileID: 6380859974218283778}
   speed: 3
+  stopDistance: 0.2
+  targetLocation_last: {x: 0, y: 0, z: 0}
   targetLocation: {x: 0, y: 0, z: 0}
   action: 0
+--- !u!114 &3594065359971310454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6128982024115681205}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5eacc8a9d995d19458ec2e6e00c85c75, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerUnit
 --- !u!1 &8761513811284816370
 GameObject:
   m_ObjectHideFlags: 0
