@@ -30,6 +30,8 @@ public class CombatManager : MonoBehaviour
     public bool battlefieldChange;
     float combat_timer;
     public static bool isDuel;
+    List<int> playerIdList= new List<int>();
+    List<int> emyIdList = new List<int>();
     [Serializable]
     public  struct BattleGroup
     {
@@ -77,10 +79,12 @@ public class CombatManager : MonoBehaviour
         {
             maxplayerforces = data.playerforce;
             maxemyforces = data.emyforce;
+            playerIdList = new List<int>(data.playerIdList);
+            emyIdList = new List<int>(data.emyIdList);
         }
         else
         {
-            maxplayerforces = 1900;
+            maxplayerforces = 1000;
             maxemyforces = 1000;        
         }
         playerforces = maxplayerforces;
@@ -242,14 +246,50 @@ public class CombatManager : MonoBehaviour
             if (playerforces <= 0)
             {
                 gameRes = 2;
+                UpdateWorldData(2);
                 audio_loss.GetComponent<AudioSource>().Play();
             }
             else if(emyforces<=0)
             {
                 gameRes = 1;
+                UpdateWorldData(1);
                 audio_win.GetComponent<AudioSource>().Play();
             }
         }
+    }
+    void UpdateWorldData(int res)
+    {
+        WorldData data = new WorldData();
+        data = WorldData.LoadStructFromJson();
+        if (res == 2)
+        {
+            foreach (int id in playerIdList)
+            {
+                for (int i = 0; i < data.playertroops.Count; i++)
+                {
+                    if (data.playertroops[i].id == id)
+                    {
+                        data.playertroops.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+        }
+        if (res == 1)
+        {
+            foreach (int id in emyIdList)
+            {
+                for (int i = 0; i < data.emytroops.Count; i++)
+                {
+                    if (data.emytroops[i].id == id)
+                    {
+                        data.emytroops.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+        }         
+        data.SaveStructToJson();
     }
     public T LoadStructFromJson<T>(string filePath)
     {
@@ -279,8 +319,8 @@ public class CombatManager : MonoBehaviour
             if(combat_timer > 1)
             {
                 combat_timer = 0;
-                playerforces -= 2;
-                emyforces -= 1;
+                playerforces -= Mathf.Max(2,(int)(5*((float)emyforces/1000)));
+                emyforces -= Mathf.Max(1, (int)(((float)playerforces / 1000)));
             }
         }
         else if(state == 1)
@@ -288,8 +328,8 @@ public class CombatManager : MonoBehaviour
             if (combat_timer > 1)
             {
                 combat_timer = 0;
-                playerforces -= 1;
-                emyforces -= 2;
+                playerforces -= Mathf.Max(1, (int)(((float)emyforces / 1000)));
+                emyforces -= Mathf.Max(2, (int)(5*((float)playerforces / 1000)));
             }
         }
         else
@@ -297,8 +337,8 @@ public class CombatManager : MonoBehaviour
             if (combat_timer > 1)
             {
                 combat_timer = 0;
-                playerforces -= 1;
-                emyforces -= 1;
+                playerforces -= Mathf.Max(1, (int)(((float)emyforces / 1000)));
+                emyforces -= Mathf.Max(1, (int)(((float)playerforces / 1000)));
             }
         }
     }

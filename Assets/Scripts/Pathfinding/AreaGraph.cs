@@ -19,6 +19,14 @@ public class AreaGraph : MonoBehaviour
     }
     public List<AreaNode> FindPath(AreaNode start, AreaNode end)
     {
+        if (start == null || end == null)
+        {
+            return null;
+        }
+        if (start == end)
+        {
+            return new List<AreaNode> { start };
+        }
         Queue<AreaNode> queue = new();
         Dictionary<AreaNode, AreaNode> cameFrom = new();
         HashSet<AreaNode> visited = new();
@@ -123,10 +131,7 @@ public class AreaGraph : MonoBehaviour
 
         return g + h;
     }
-    private AreaNode GetLowestFCostNode(
-    List<AreaNode> openList,
-    Dictionary<AreaNode, float> gCost,
-    AreaNode end)
+    private AreaNode GetLowestFCostNode(List<AreaNode> openList,Dictionary<AreaNode, float> gCost,AreaNode end)
     {
         AreaNode bestNode = openList[0];
         float bestFCost = GetFCost(bestNode, gCost, end);
@@ -145,10 +150,16 @@ public class AreaGraph : MonoBehaviour
 
         return bestNode;
     }
-    public List<AreaNode> FindPathAStar(
-    AreaNode start,
-    AreaNode end)
+    public List<AreaNode> FindPathAStar(AreaNode start, AreaNode end)
     {
+        if (start == null || end == null)
+        {
+            return null;
+        }
+        if (start == end)
+        {
+            return new List<AreaNode> { start };
+        }
         List<AreaNode> openList = new();
         HashSet<AreaNode> closedSet = new();
 

@@ -1,10 +1,14 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 
 [Serializable]
 public class CombatData
 {
+    public List<int> playerIdList = new List<int>();
+    public List<int> emyIdList = new List<int>();
+
     public int playerforce;
     public int emyforce;
     public static CombatData LoadStructFromJson()

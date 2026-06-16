@@ -2,6 +2,9 @@ using System.Collections.Generic;
 using UnityEngine;
 public class EnemyUnit : MonoBehaviour
 {
+    public GameObject sign;
+    public float gravity = -9.8f;
+    private Vector3 velocity;
     public static int eid;
     public int ID;
     public int troopState;
@@ -9,10 +12,9 @@ public class EnemyUnit : MonoBehaviour
     public int orderId;
     public AreaGraph graph;
     public Animator anim;
-    public float speed = 3;
+    float speed = 0.5f;
     public float stopDistance = 0.2f;
     private CharacterController controller;
-
     public Vector3 targetLocation_last;
     public Vector3 targetLocation;
     public bool action;
@@ -26,21 +28,32 @@ public class EnemyUnit : MonoBehaviour
         graph = GameObject.FindWithTag("Map").GetComponent<AreaGraph>();
         ID = eid;
         eid++;
-        controller = GetComponent<CharacterController>();
         if (WarManager.HasData)
         {
-            if (ID >= WarManager.data.emytroops.Count)
+            WorldData data = new WorldData();
+            data = WorldData.LoadStructFromJson();
+            bool contain = false;
+            int index = -1;
+            for(int i = 0;i< data.emytroops.Count; i++)
             {
-                this.gameObject.SetActive(false);
+                if (data.emytroops[i].id == ID)
+                {
+                    contain = true;
+                    index = i;
+                    break;
+                }
+            }
+            if (contain)
+            {
+                controller.enabled = false;
+                transform.position = data.emytroops[index].pos;
+                troopState = data.emytroops[index].state;
+                controller.enabled = true;                
             }
             else
             {
-                controller.enabled = false;
-                transform.position = WarManager.data.emytroops[ID];
-                troopState = WarManager.data.emytroopsState[ID];
-                controller.enabled = true;
+                this.gameObject.SetActive(false);
             }
-
         }
     }
     private void OnEnable()
@@ -66,13 +79,30 @@ public class EnemyUnit : MonoBehaviour
     {
         if (preWar)
         {
-            this.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+            sign.SetActive(true);
+            this.gameObject.layer = LayerMask.NameToLayer("Unit");
             controller.enabled = false;
             anim.Play("idle");
             return;
         }
         StartBattle();
         Move();
+        if (WarManager.MainGameTimer > 30)
+        {
+            troopState = 1;
+            action = true;
+        }
+        if (troopState == 1)
+        {
+            foreach(GameObject c in Castle.AllCastle)
+            {
+                if (c.GetComponent<Castle>().camp == 1)
+                {
+                    targetLocation = c.transform.position;
+                    break;
+                }
+            }
+        }
     }
     void Move()
     {
@@ -89,28 +119,32 @@ public class EnemyUnit : MonoBehaviour
                     List<AreaNode> areaPath = new List<AreaNode>();
                     List<Vector3> path = new List<Vector3>();
                     areaPath = graph.FindPathAStar(startNode, endNode);
-                    if (areaPath.Count > 0)
+                    if (areaPath != null)
                     {
-                        path = new List<Vector3>(graph.ConvertAreaPathToWorldPath(areaPath, targetLocation));
-                        SetPath(path);
-                        targetLocation_last = targetLocation;
-                    }
-                    else
-                    {
-                        if (startNode == endNode)
+                        if (areaPath.Count > 0)
                         {
                             path = new List<Vector3>(graph.ConvertAreaPathToWorldPath(areaPath, targetLocation));
                             SetPath(path);
                             targetLocation_last = targetLocation;
                         }
-                    }
+                        else
+                        {
+                            if (startNode == endNode)
+                            {
+                                path = new List<Vector3>(graph.ConvertAreaPathToWorldPath(areaPath, targetLocation));
+                                SetPath(path);
+                                targetLocation_last = targetLocation;
+                            }
+                        }
+                    }                
                 }
-            }
-            else
-            {
-                this.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
-            }
+            }       
             MoveAlongPath();
+            HandleGravity();
+        }
+        else
+        {
+            this.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
         }
     }
     void StartBattle()
@@ -185,5 +219,16 @@ public class EnemyUnit : MonoBehaviour
         {
             anim.Play("run");
         }
+    }
+    void HandleGravity()
+    {
+        if (controller.isGrounded && velocity.y < 0)
+        {
+            velocity.y = -2f;
+        }
+
+        velocity.y += gravity * Time.deltaTime;
+
+        controller.Move(velocity * Time.deltaTime);
     }
 }

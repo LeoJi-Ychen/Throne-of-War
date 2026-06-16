@@ -7,6 +7,9 @@ using static UnityEngine.GraphicsBuffer;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerUnitMove : MonoBehaviour
 {
+    public GameObject sign;
+    public float gravity = -9.8f;
+    private Vector3 velocity;
     public bool preWar;
     public AreaGraph graph;
     public Animator anim;
@@ -34,7 +37,8 @@ public class PlayerUnitMove : MonoBehaviour
     {
         if (preWar)
         {
-            this.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+            sign.SetActive(true);
+            this.gameObject.layer = LayerMask.NameToLayer("Unit");
             controller.enabled = false;
             anim.Play("idle01");
             return;
@@ -56,29 +60,33 @@ public class PlayerUnitMove : MonoBehaviour
                     List<AreaNode> areaPath = new List<AreaNode>();
                     List<Vector3> path = new List<Vector3>();
                     areaPath = graph.FindPathAStar(startNode, endNode);
-                    if (areaPath.Count > 0)
+                    if(areaPath != null)
                     {
-                        path = new List<Vector3>(graph.ConvertAreaPathToWorldPath(areaPath, targetLocation));
-                        SetPath(path);
-                        targetLocation_last = targetLocation;
-                    }
-                    else
-                    {
-                        if (startNode == endNode)
+                        if (areaPath.Count > 0)
                         {
                             path = new List<Vector3>(graph.ConvertAreaPathToWorldPath(areaPath, targetLocation));
                             SetPath(path);
                             targetLocation_last = targetLocation;
                         }
-                    }
+                        else
+                        {
+                            if (startNode == endNode)
+                            {
+                                path = new List<Vector3>(graph.ConvertAreaPathToWorldPath(areaPath, targetLocation));
+                                SetPath(path);
+                                targetLocation_last = targetLocation;
+                            }
+                        }
+                    }                   
                 }
-            }
-            else
-            {
-                this.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
-            }
+            }       
             //MoveToTarget();
             MoveAlongPath();
+            HandleGravity();
+        }
+        else
+        {
+            this.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
         }
     }
     void MoveToTarget()
@@ -130,6 +138,17 @@ public class PlayerUnitMove : MonoBehaviour
         {
             anim.Play("run");
         }
+    }
+    void HandleGravity()
+    {
+        if (controller.isGrounded && velocity.y < 0)
+        {
+            velocity.y = -2f;
+        }
+
+        velocity.y += gravity * Time.deltaTime;
+
+        controller.Move(velocity * Time.deltaTime);
     }
     float distanceToTarget(GameObject target)
     {

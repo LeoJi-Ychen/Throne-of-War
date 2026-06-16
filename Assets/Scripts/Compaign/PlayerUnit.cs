@@ -16,19 +16,30 @@ public class PlayerUnit : MonoBehaviour
         controller = GetComponent<CharacterController>();
         if (WarManager.HasData)
         {
-            
-            if(ID>= WarManager.data.playtroops.Count)
+            WorldData data = new WorldData();
+            data = WorldData.LoadStructFromJson();
+            bool contain = false;
+            int index = -1;
+            for (int i = 0; i < data.playertroops.Count; i++)
             {
-                this.gameObject.SetActive(false);
+                if (data.playertroops[i].id == ID)
+                {
+                    contain = true;
+                    index = i;
+                    break;
+                }
+            }
+            if (contain)
+            {
+                controller.enabled = false;
+                transform.position = data.playertroops[index].pos;
+                troopState = data.playertroops[index].state;
+                controller.enabled = true;
             }
             else
             {
-                controller.enabled = false;
-                transform.position = WarManager.data.playtroops[ID];
-                troopState = WarManager.data.playtroopsState[ID];
-                controller.enabled = true;
+                this.gameObject.SetActive(false);
             }
-            
         }
     }
     private void OnEnable()

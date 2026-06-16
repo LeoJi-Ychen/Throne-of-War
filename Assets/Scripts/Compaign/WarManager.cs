@@ -5,23 +5,30 @@ using static WarManager;
 public class WarManager : MonoBehaviour
 {
     Camera camera;
-    public List<GameObject> castles = new();
+    public GameObject LoadingPage;
+    public GameObject fog;
+    List<GameObject> castles = new();
     public GameObject winscreen;
     public GameObject losescreen;
     public string sceneName = "Battlefield";
     public static bool War;
     public static float Clock;
     public static float TriggerRange;
-    public static WorldData data;
+    public static WorldData Data;
     public static bool HasData;
     public static List<Confrontation> Confrontations = new();
+    public static List<int> defeatedTroop_player = new();
+    public static List<int> defeatedTroop_enemy = new();
     public static int Result;
-    public class Confrontation
+    string keyName = "saved";
+    public static float MainGameTimer;
+
+   public class Confrontation
     {
         public Vector3 location;
         public List<GameObject> playerUnits = new();
         public List<GameObject> emyUnits = new();
-        public float timer;
+        public float timer;      
     }
     private void Awake()
     {
@@ -34,19 +41,45 @@ public class WarManager : MonoBehaviour
             c.emyUnits.Clear();
         }
         HasData = false;
-        data = WorldData.LoadStructFromJson();
-        if(data != null )
+        if (PlayerPrefs.HasKey(keyName))
         {
-            HasData = true;
-            Camera camera = Camera.main;
-            camera.transform.parent.transform.position = data.camPos;
+            if (PlayerPrefs.GetInt(keyName) == 1)
+            {
+                Data = WorldData.LoadStructFromJson();
+                if (Data != null)
+                {
+                    HasData = true;
+                    Camera camera = Camera.main;
+                    camera.transform.parent.transform.position = Data.camPos;
+                    fog.GetComponent<FogOfWar>().explored = new bool[Data.width, Data.height];
+                    fog.GetComponent<FogOfWar>().visible = new bool[Data.width, Data.height];
+                    for (int x = 0; x < Data.width; x++)
+                    {
+                        for (int y = 0; y < Data.height; y++)
+                        {
+                            int index = x + y * Data.width;
+
+                            fog.GetComponent<FogOfWar>().explored[x, y] = Data.explored[index];
+                            fog.GetComponent<FogOfWar>().visible[x, y] = Data.visible[index];
+                        }
+                    }
+                }
+            }
+            else
+            {
+                PlayerPrefs.SetInt(keyName, 1);
+            }
         }
+        else
+        {
+            PlayerPrefs.SetInt(keyName, 1);
+        }  
     }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        Clock = 10;
-        TriggerRange = 5;
+        Clock = 3;
+        TriggerRange = 6;
     }
     private void Save()
     {
@@ -57,19 +90,51 @@ public class WarManager : MonoBehaviour
         {
             if( p != null && p.activeSelf)
             {
-                data.playtroops.Add(p.transform.position);
-                data.playtroopsState.Add(p.GetComponent<PlayerUnit>().troopState);
+                TroopData td = new TroopData();
+                td.id = p.GetComponent<PlayerUnit>().ID;
+                td.pos = p.transform.position;
+                td.state = p.GetComponent<PlayerUnit>().troopState;
+                data.playertroops.Add(td);
             } 
         }
         foreach (GameObject e in EnemyUnit.AllEnemyUnit)
         {
             if (e != null && e.activeSelf)
             {
-                data.emytroops.Add(e.transform.position);
-                data.emytroopsState.Add(e.GetComponent<EnemyUnit>().troopState);
+                TroopData td = new TroopData();
+                td.id = e.GetComponent<EnemyUnit>().ID;
+                td.pos = e.transform.position;
+                td.state = e.GetComponent<EnemyUnit>().troopState;
+                data.emytroops.Add(td);
+            }
+        }
+        int width = fog.GetComponent<FogOfWar>().explored.GetLength(0);
+        int height = fog.GetComponent<FogOfWar>().explored.GetLength(1);
+
+        data.width = width;
+        data.height = height;
+
+        data.explored = new bool[width * height];
+        data.visible = new bool[width * height];
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                int index = x + y * width;
+
+                data.explored[index] =
+                    fog.GetComponent<FogOfWar>().explored[x, y];
+
+                data.visible[index] =
+                    fog.GetComponent<FogOfWar>().visible[x, y];
             }
         }
         data.SaveStructToJson();
+        Data = data;
+        EnemyUnit.eid = 0;
+        PlayerUnit.pid = 0;
+
     }
     // Update is called once per frame
     void Update()
@@ -80,6 +145,8 @@ public class WarManager : MonoBehaviour
         }
         int playerPoint = 0;
         int enemyPoint = 0;
+        MainGameTimer += Time.deltaTime;
+        castles = new List<GameObject>(Castle.AllCastle);
         foreach(GameObject c in castles)
         {
             if (c.GetComponent<Castle>().camp == 0)
@@ -89,17 +156,19 @@ public class WarManager : MonoBehaviour
             else
             {
                 playerPoint++;
-            }
-            if (enemyPoint == 0)
-            {
-                Result = 1;
-                winscreen.SetActive(true);
-            }
-            if (playerPoint == 0)
-            {
-                Result = 2;
-                losescreen.SetActive(true);
-            }
+            }         
+        }
+        if (enemyPoint == 0)
+        {
+            Result = 1;
+            PlayerPrefs.SetInt(keyName, 0);
+            winscreen.SetActive(true);
+        }
+        else if (playerPoint == 0)
+        {
+            Result = 2;
+            PlayerPrefs.SetInt(keyName, 0);
+            losescreen.SetActive(true);
         }
         for (int i = 0; i < Confrontations.Count; i++)
         {
@@ -135,6 +204,14 @@ public class WarManager : MonoBehaviour
                 CombatData data = new CombatData();
                 data.playerforce = Confrontations[i].playerUnits.Count * 1000;
                 data.emyforce = Confrontations[i].emyUnits.Count * 1000;
+                foreach(GameObject p in Confrontations[i].playerUnits)
+                {
+                    data.playerIdList.Add(p.GetComponent<PlayerUnit>().ID);
+                }
+                foreach (GameObject e in Confrontations[i].emyUnits)
+                {
+                    data.emyIdList.Add(e.GetComponent<EnemyUnit>().ID);
+                }
                 data.SaveStructToJson();
                 Confrontations.RemoveAt(i);
                 break;
@@ -144,6 +221,7 @@ public class WarManager : MonoBehaviour
         {
             War = false;
             Save();
+            LoadingPage.SetActive(true);
             SceneManager.LoadSceneAsync(sceneName);
         }
     }

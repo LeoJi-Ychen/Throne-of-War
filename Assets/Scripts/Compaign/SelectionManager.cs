@@ -33,7 +33,11 @@ public class SelectionManager : MonoBehaviour
         Ray ray = mainCamera.ScreenPointToRay(mousePos);
         int groundLayerMask = LayerMask.GetMask("Ground");
         GameObject aim = null;
-        if (Physics.Raycast(ray, out RaycastHit h, 1000f))
+        int layerMask = ~LayerMask.GetMask(
+         "Fog",
+         "Ignore Raycast",
+         "UIBlock");
+        if (Physics.Raycast(ray, out RaycastHit h, 1000f,layerMask))
         {
             aim = h.collider.gameObject;
         }

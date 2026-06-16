@@ -25,6 +25,7 @@ public class StartScreen_Load : MonoBehaviour
 
     void Load()
     {
+        PlayerPrefs.SetInt(keyName, 1);
         SceneManager.LoadSceneAsync("MainGame");
     }
 }
