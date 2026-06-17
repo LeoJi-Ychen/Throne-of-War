@@ -217,4 +217,19 @@ public class FogOfWar : MonoBehaviour
     {
         CancelInvoke(nameof(UpdateFog));
     }
+    public bool IsWorldVisible(Vector3 worldPos)
+    {
+        Vector2 texPos = WorldToTex(worldPos);
+
+        int x = Mathf.FloorToInt(texPos.x);
+        int y = Mathf.FloorToInt(texPos.y);
+
+        if (x < 0 || x >= textureSize ||
+            y < 0 || y >= textureSize)
+        {
+            return false;
+        }
+
+        return visible[x, y];
+    }
 }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using static WarManager;
 public class WarManager : MonoBehaviour
@@ -143,6 +144,7 @@ public class WarManager : MonoBehaviour
         {
             return;
         }
+        Exit();
         int playerPoint = 0;
         int enemyPoint = 0;
         MainGameTimer += Time.deltaTime;
@@ -250,5 +252,13 @@ public class WarManager : MonoBehaviour
         t.y = pos.y;
         float res = (t - pos).magnitude;
         return res;
+    }
+    void Exit()
+    {
+        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            Save();
+            SceneManager.LoadSceneAsync("StartScreen");
+        }
     }
 }

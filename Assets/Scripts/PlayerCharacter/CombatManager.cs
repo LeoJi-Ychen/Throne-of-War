@@ -4,6 +4,7 @@ using UnityEngine;
 using System.Linq;
 using System.IO;
 using System.Data;
+using UnityEngine.InputSystem;
 public class CombatManager : MonoBehaviour
 {
     public static bool Fighting;
@@ -340,6 +341,10 @@ public class CombatManager : MonoBehaviour
                 playerforces -= Mathf.Max(1, (int)(((float)emyforces / 1000)));
                 emyforces -= Mathf.Max(1, (int)(((float)playerforces / 1000)));
             }
+        }
+        if(Keyboard.current.leftCtrlKey.isPressed && Keyboard.current.hKey.wasPressedThisFrame)
+        {
+            emyforces -= 100;
         }
     }
 }

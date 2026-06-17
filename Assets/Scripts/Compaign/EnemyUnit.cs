@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 public class EnemyUnit : MonoBehaviour
 {
+    public GameObject model;
+    float visiabletimer;
     public GameObject sign;
     public float gravity = -9.8f;
     private Vector3 velocity;
@@ -84,6 +86,14 @@ public class EnemyUnit : MonoBehaviour
             controller.enabled = false;
             anim.Play("idle");
             return;
+        }
+        if (IsWorldVisible())
+        {
+            model.SetActive(true);
+        }
+        else
+        {
+            model.SetActive(false);
         }
         StartBattle();
         Move();
@@ -230,5 +240,36 @@ public class EnemyUnit : MonoBehaviour
         velocity.y += gravity * Time.deltaTime;
 
         controller.Move(velocity * Time.deltaTime);
+    }
+    public bool IsWorldVisible()
+    {
+        visiabletimer += Time.deltaTime;
+        if(visiabletimer > 0.3f)
+        {
+            visiabletimer = 0;
+            foreach (GameObject p in PlayerUnit.AllPlayerUnit)
+            {
+                if (p.activeSelf)
+                {
+                    if (distanceToTarget(p) < 18)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        else
+        {
+            if (model.activeSelf)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        
     }
 }
